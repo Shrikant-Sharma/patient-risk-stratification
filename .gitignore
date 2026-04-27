@@ -22,6 +22,9 @@ models/*.pt
 # MLflow tracking files
 mlruns/
 mlartifacts/
+mlflow.db
+*.db
+*.sqlite
 
 # Environment secrets
 .env
@@ -33,3 +36,12 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Docker
+.docker/
+
+# IDE — extending existing
+.vscode/settings.json
+
+# OS — extending existing
+desktop.ini
