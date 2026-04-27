@@ -1,0 +1,12 @@
+{
+  "brier_raw": 0.09222429990768433,
+  "brier_calibrated": 0.10373897537295314,
+  "calibration_decision": "use_raw_model",
+  "reason": "Platt scaling degraded Brier on this small dataset; raw model is well-calibrated enough.",
+  "recommended_threshold_default": 0.5,
+  "recommended_threshold_f1": 0.5334317684173584,
+  "recommended_threshold_clinical": 0.42262399196624756,
+  "clinical_threshold_precision": 0.8125,
+  "clinical_threshold_recall": 0.9285714285714286,
+  "clinical_threshold_rationale": "Maximize recall (sensitivity) for screening, accepting more false alarms; precision constraint >= 0.80"
+}
