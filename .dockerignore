@@ -1,0 +1,45 @@
+# Don't include these in the Docker build context
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Virtual environment (huge, will reinstall in container)
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Notebooks (not needed in production API container)
+notebooks/
+*.ipynb_checkpoints/
+
+# Data files (huge, gitignored already)
+data/
+
+# MLflow tracking
+mlruns/
+mlartifacts/
+*.db
+
+# Reports (PNGs, figures — not needed at runtime)
+reports/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Tests
+tests/
+
+# OS junk
+.DS_Store
+Thumbs.db
