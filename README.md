@@ -61,7 +61,7 @@ patient-risk-stratification/
 ## Methodology
 
 ### 1. Exploratory Data Analysis
-Dataset: UCI Heart Disease (Cleveland), 303 patients, 14 clinical features. Target reframed from 5-class severity to binary (disease vs. healthy) for clinical actionability. Distribution: 54% healthy / 46% disease. Demographic skew flagged (68% male) as a fairness concern requiring separate validation by sex before clinical use.
+Dataset: UCI Heart Disease (Cleveland), 303 patients, 13 clinical features (plus binary target). Target reframed from 5-class severity to binary (disease vs. healthy) for clinical actionability. Distribution: 54% healthy / 46% disease. Demographic skew flagged (68% male) as a fairness concern requiring separate validation by sex before clinical use.
 
 ### 2. Preprocessing
 Two parallel preprocessing tracks built to match each model family:
