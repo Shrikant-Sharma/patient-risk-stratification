@@ -39,6 +39,8 @@ Five model families compared (Logistic Regression, Random Forest, XGBoost, SVM, 
 ---
 
 ## Project Structure
+
+---
 patient-risk-stratification/
 ├── data/
 │   ├── raw/                    UCI Heart Disease (Cleveland subset)
