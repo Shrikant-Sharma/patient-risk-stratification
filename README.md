@@ -82,7 +82,7 @@ Top three (RF, SVM, XGBoost) tuned via RandomizedSearchCV with 5-fold cross-vali
 
 ![Model Comparison](reports/figures/model_comparison.png)
 
-### 4. Explainability — SHAP
+### 4. Explainability: SHAP
 
 SHAP TreeExplainer applied to the tuned XGBoost. Global feature importance and per-patient force plots generated.
 
@@ -92,7 +92,7 @@ The model independently rediscovered a counterintuitive clinical finding from ED
 
 Per-patient explanations available via the `/explain` API endpoint, enabling clinicians to verify any prediction:
 
-![SHAP Waterfall — Disease patient](reports/figures/shap_waterfall_disease.png)
+![SHAP Waterfall: Disease patient](reports/figures/shap_waterfall_disease.png)
 
 ### 5. Calibration & Threshold Tuning
 
@@ -112,9 +112,9 @@ The clinical threshold maximizes recall under a precision-≥-0.80 constraint, a
 ### 6. Deployment
 
 FastAPI service exposes three endpoints:
-- `GET /health` — service liveness
-- `POST /predict` — patient features → disease probability + risk tier + clinical threshold applied
-- `POST /explain` — patient features → prediction + per-feature SHAP contributions
+- `GET /health` : service liveness
+- `POST /predict` : patient features → disease probability + risk tier + clinical threshold applied
+- `POST /explain` : patient features → prediction + per-feature SHAP contributions
 
 Pydantic validates inputs against clinical ranges (age 18-100, BP 50-250, etc.) before reaching the model. OpenAPI/Swagger docs auto-generated at `/docs`.
 
@@ -187,7 +187,7 @@ A few engineering issues debugged during build, included here because the diagno
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT.See [LICENSE](LICENSE).
 
 ---
 
