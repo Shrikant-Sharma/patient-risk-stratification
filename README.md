@@ -6,6 +6,9 @@
 [![SHAP](https://img.shields.io/badge/SHAP-0.51-brightgreen.svg)](https://shap.readthedocs.io)
 [![Docker](https://img.shields.io/badge/Docker-multi--stage-2496ED.svg)](https://docker.com)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![AWS Lambda](https://img.shields.io/badge/AWS%20Lambda-deployed-FF9900.svg?logo=awslambda&logoColor=white)](https://fcwkvdgi7lo2hp2xtfmyxzieia0xmfwr.lambda-url.us-east-1.on.aws/docs)
+
+> 🌐 **[Try the live API in your browser](https://fcwkvdgi7lo2hp2xtfmyxzieia0xmfwr.lambda-url.us-east-1.on.aws/docs)** — Swagger UI on AWS Lambda lets you POST a patient record to `/predict` and `/explain` without writing any code. Containerized FastAPI + XGBoost + SHAP behind a public HTTPS Function URL.
 
 End-to-end machine learning pipeline that predicts patient heart disease risk from clinical features. Built to demonstrate the full ML workflow: EDA, feature engineering, model selection, explainability, calibration, and containerized deployment. **Phase 2 (May 2026)** added causal inference and survival analysis modules on the NHEFS cohort, extending the project from predictive to explanatory inference.
 
@@ -51,7 +54,7 @@ The naive PSM comparison estimated +2.54 kg for the causal effect; after backdoo
 
 **Serving:** FastAPI, Uvicorn, Pydantic
 
-**Deployment:** Docker (multi-stage), uvicorn ASGI server
+**Deployment:** Docker (multi-stage), uvicorn (local), AWS Lambda + ECR + Mangum (ASGI→Lambda adapter) + EventBridge (production)
 
 **Visualization:** matplotlib, seaborn
 
@@ -141,7 +144,38 @@ FastAPI service exposes three endpoints:
 
 Pydantic validates inputs against clinical ranges (age 18-100, BP 50-250, etc.) before reaching the model. OpenAPI/Swagger docs auto-generated at `/docs`.
 
-The service is containerized via a multi-stage Dockerfile using a slim Python base, non-root user (`apiuser`), HEALTHCHECK directive, and `--chown` during multi-stage COPY to handle the multi-stage + non-root user permissions clash.
+**Local execution.** Containerized via a multi-stage Dockerfile using a slim Python base, non-root user (`apiuser`), HEALTHCHECK directive, and `--chown` during multi-stage COPY to handle the multi-stage + non-root user permissions clash.
+
+**Production deployment — AWS Lambda.** Same FastAPI codebase deployed as a container image to AWS Lambda with a public HTTPS Function URL: **[live Swagger UI](https://fcwkvdgi7lo2hp2xtfmyxzieia0xmfwr.lambda-url.us-east-1.on.aws/docs)**.
+Internet → Lambda Function URL → Lambda container → Mangum → FastAPI (XGBoost + SHAP)
+↑
+Image stored in ECR (~1.1 GB)
+Key engineering decisions:
+
+- **Mangum ASGI adapter** translates Lambda events to ASGI requests, allowing the same FastAPI code to run locally via uvicorn and serverlessly on Lambda — no application logic changes between environments. Three new lines in `src/app.py`.
+- **Separate `Dockerfile.lambda`** uses AWS's official `public.ecr.aws/lambda/python:3.13` base image (Runtime Interface Client built in). The original `Dockerfile` and local Docker workflow remain unchanged.
+- **Lean `requirements-lambda.txt` (9 packages vs 150+ in dev `requirements.txt`).** Production runtime only needs fastapi, mangum, pydantic, xgboost, scikit-learn, numpy, pandas, joblib, shap. Image dropped from a projected ~3 GB to ~1 GB, directly improving cold-start init time.
+- **Memory 3008 MB, timeout 60s.** SHAP + XGBoost + scipy + numba reach near the memory ceiling during cold-start init (~217 MB steady-state warm). Lambda CPU scales linearly with memory, so generous memory also accelerates init.
+- **EventBridge scheduled warmer** invokes the function every 5 minutes to keep one container warm, eliminating 60+ second cold starts on the 1 GB image. Free under Lambda's 1M-invocation/month tier.
+
+Try the deployed endpoints:
+
+```bash
+# Health
+curl https://fcwkvdgi7lo2hp2xtfmyxzieia0xmfwr.lambda-url.us-east-1.on.aws/health
+
+# Predict (sample high-risk patient — disease_probability 0.97, risk_tier HIGH)
+curl -X POST https://fcwkvdgi7lo2hp2xtfmyxzieia0xmfwr.lambda-url.us-east-1.on.aws/predict \
+  -H "Content-Type: application/json" \
+  -d '{"age":56,"sex":1,"cp":4,"trestbps":140,"chol":280,"fbs":0,"restecg":2,"thalach":130,"exang":1,"oldpeak":2.5,"slope":2,"ca":2,"thal":7}'
+
+# Explain — returns per-feature SHAP contributions with directional push toward "disease" or "healthy"
+curl -X POST https://fcwkvdgi7lo2hp2xtfmyxzieia0xmfwr.lambda-url.us-east-1.on.aws/explain \
+  -H "Content-Type: application/json" \
+  -d '{"age":56,"sex":1,"cp":4,"trestbps":140,"chol":280,"fbs":0,"restecg":2,"thalach":130,"exang":1,"oldpeak":2.5,"slope":2,"ca":2,"thal":7}'
+```
+
+Or use the [interactive Swagger UI](https://fcwkvdgi7lo2hp2xtfmyxzieia0xmfwr.lambda-url.us-east-1.on.aws/docs) — same as local `/docs`, live on the internet.
 
 ### 7. Causal Inference: ATT of Smoking Cessation on Weight Change
 
@@ -230,6 +264,14 @@ docker run -d --name patient-risk-api -p 8000:8000 patient-risk-api:1.0
 
 Then visit http://localhost:8000/docs.
 
+### Live Deployed API (AWS Lambda)
+
+No setup required — open the Swagger UI directly:
+
+**https://fcwkvdgi7lo2hp2xtfmyxzieia0xmfwr.lambda-url.us-east-1.on.aws/docs**
+
+First request after extended idle may take a few seconds (Lambda cold start, mitigated by an EventBridge warmer); subsequent requests are sub-second.
+
 ---
 
 ## Lessons Learned
@@ -247,6 +289,10 @@ A few engineering and methodological issues debugged during build, included here
 **5. Library defaults can systematically bias causal estimates (Phase 2).** DoWhy's default `propensity_score_matching` produced +2.04 kg versus my custom Hernán-Robins implementation's +3.27 kg — a 1.2 kg gap traceable to four specific defaults: L2 penalty (vs unpenalized), linear-only confounder terms (vs quadratics on continuous variables), no caliper (vs 0.2-SD), and matching with replacement (vs without). Production lesson: causal libraries are most valuable for the framework and refutation tests; for the actual estimate, specify the propensity model and matching parameters explicitly rather than accepting defaults.
 
 **6. Unadjusted Kaplan-Meier curves can actively reverse a true causal effect (Phase 2).** On NHEFS 10-year mortality, the unadjusted log-rank showed quitters with significantly worse survival (p = 0.005). After Cox PH adjustment for age and other confounders, the effect attenuated to HR 1.03 (p = 0.78) — fully null. The unadjusted picture wasn't just imprecise, it was directionally wrong. Production lesson: never report unadjusted survival comparisons as evidence of treatment effect in observational data without an adjusted analysis alongside.
+
+**7. Lambda Function URL needs two permissions, not one (October 2025 AWS change).** Initial Lambda deployment returned 403 Forbidden despite a textbook-correct resource policy granting `lambda:InvokeFunctionUrl` with the `FunctionUrlAuthType=NONE` condition — exactly the policy AWS documentation prescribed for years. AWS quietly changed the authorization model in October 2025: Function URLs now require *both* `lambda:InvokeFunctionUrl` AND `lambda:InvokeFunction` actions in the resource policy. Existing accounts received grandfathered exceptions; new accounts hit the wall. Diagnosis required reading recent GitHub issues and AWS service health notifications, not just the current docs. Production lesson: AWS authorization model changes are rare but real — when a "by-the-book" policy is rejected, check whether the book got rewritten recently.
+
+**8. Container image format mismatch breaks Lambda deployment.** Docker Desktop's BuildKit defaults to OCI manifest lists with provenance attestations — perfectly valid for most registries, but Lambda's container runtime only accepts Docker V2 Schema 2 single-manifest format. The deploy failed with `InvalidParameterValueException: image manifest, config or layer media type ... is not supported`. Fix: rebuild with `--provenance=false`. Production lesson: container registry standards aren't uniform; downstream consumers (Lambda, ECS, Kubernetes runtimes) accept different subsets of OCI/Docker manifest schemas, and "it works on my registry" is necessary but not sufficient.
 
 ---
 
@@ -270,12 +316,11 @@ A few engineering and methodological issues debugged during build, included here
 
 ## Future Work
 
-- **AIPW (Augmented Inverse Probability Weighting)** for doubly-robust causal estimation — consistent if either the propensity or outcome model is correctly specified
+- - **AIPW (Augmented Inverse Probability Weighting)** for doubly-robust causal estimation — consistent if either the propensity or outcome model is correctly specified
 - **Causal Forests** (econml, on Python 3.12 venv) for heterogeneous treatment effect estimation across subgroups
-- **AWS Lambda + API Gateway** public deployment of the FastAPI service, behind a public Swagger UI
+- **CI/CD pipeline** (GitHub Actions) for automated rebuild → ECR push → Lambda update on every commit to main
+- **CloudFront edge caching** in front of the Lambda Function URL for global low-latency access and DDoS protection
 - **Agentic explanation layer** with LangGraph for natural-language clinical summaries
-- **Larger longitudinal dataset integration** (NHANES, MIMIC subsets) to enable deeper validation and richer covariate sets
-- **Model monitoring** with drift detection and automated retraining triggers
 
 ---
 
