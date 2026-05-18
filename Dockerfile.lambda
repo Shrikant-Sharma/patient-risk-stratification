@@ -1,0 +1,19 @@
+# Lambda container image for Patient Risk Stratification API.
+# Uses AWS's official Python 3.13 base image which has the Lambda
+# Runtime Interface Client (RIC) baked in. The RIC is what makes a
+# container respond to Lambda's invoke protocol.
+FROM public.ecr.aws/lambda/python:3.13
+
+# Install Python dependencies into the Lambda task root.
+# ${LAMBDA_TASK_ROOT} is /var/task — Lambda's working directory.
+COPY requirements-lambda.txt ${LAMBDA_TASK_ROOT}/
+RUN pip install --no-cache-dir -r ${LAMBDA_TASK_ROOT}/requirements-lambda.txt
+
+# Copy application source and trained model artifacts.
+COPY src/    ${LAMBDA_TASK_ROOT}/src/
+COPY models/ ${LAMBDA_TASK_ROOT}/models/
+
+# CMD tells Lambda which function to invoke per request.
+# Format: <module path>.<callable>
+# This calls src.app.handler(event, context) — i.e. our Mangum wrapper.
+CMD ["src.app.handler"]

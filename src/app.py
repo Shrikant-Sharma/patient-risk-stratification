@@ -2,6 +2,7 @@
 Patient Risk Stratification API.
 Serves a tuned XGBoost model with SHAP explainability.
 """
+from mangum import Mangum
 import json
 import os
 from contextlib import asynccontextmanager
@@ -163,3 +164,12 @@ async def root():
         "docs": "/docs",
         "health": "/health",
     }
+
+
+# ---------------------------------------------------------------------------
+# AWS Lambda handler — translates Lambda events to ASGI for FastAPI.
+# Used only when this app is deployed as a Lambda container image.
+# Local uvicorn execution ignores this; it just imports cleanly.
+# ---------------------------------------------------------------------------
+
+handler = Mangum(app)

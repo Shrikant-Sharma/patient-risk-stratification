@@ -45,3 +45,10 @@ Thumbs.db
 
 # OS — extending existing
 desktop.ini
+
+# AWS Lambda deployment artifacts (operational, not source)
+trust-policy.json
+warmer-targets.json
+payload.json
+response.txt
+lambda-response.json
