@@ -316,7 +316,7 @@ A few engineering and methodological issues debugged during build, included here
 
 ## Future Work
 
-- - **AIPW (Augmented Inverse Probability Weighting)** for doubly-robust causal estimation — consistent if either the propensity or outcome model is correctly specified
+- **AIPW (Augmented Inverse Probability Weighting)** for doubly-robust causal estimation — consistent if either the propensity or outcome model is correctly specified
 - **Causal Forests** (econml, on Python 3.12 venv) for heterogeneous treatment effect estimation across subgroups
 - **CI/CD pipeline** (GitHub Actions) for automated rebuild → ECR push → Lambda update on every commit to main
 - **CloudFront edge caching** in front of the Lambda Function URL for global low-latency access and DDoS protection
