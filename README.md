@@ -20,8 +20,8 @@ End-to-end machine learning pipeline that predicts patient heart disease risk fr
 
 | Metric | Value |
 |---|---|
-| Test ROC-AUC (tuned XGBoost) | 0.95 |
-| 5-fold CV ROC-AUC | 0.89 |
+| Test AUC-ROC (tuned XGBoost) | 0.95 |
+| 5-fold CV AUC-ROC | 0.89 |
 | Recall at clinical threshold | 0.93 |
 | Precision at clinical threshold | 0.81 |
 | Brier score (calibration) | 0.092 |
@@ -62,7 +62,7 @@ The naive PSM comparison estimated +2.54 kg for the causal effect; after backdoo
 
 ## Project Structure
 
----
+```
 patient-risk-stratification/
 ├── data/
 │   ├── raw/                              UCI Heart Disease (Cleveland subset)
@@ -81,6 +81,7 @@ patient-risk-stratification/
 ├── Dockerfile                            Multi-stage production image
 ├── requirements.txt                      Pinned dependencies
 └── README.md
+```
 
 ---
 
@@ -147,9 +148,13 @@ Pydantic validates inputs against clinical ranges (age 18-100, BP 50-250, etc.) 
 **Local execution.** Containerized via a multi-stage Dockerfile using a slim Python base, non-root user (`apiuser`), HEALTHCHECK directive, and `--chown` during multi-stage COPY to handle the multi-stage + non-root user permissions clash.
 
 **Production deployment — AWS Lambda.** Same FastAPI codebase deployed as a container image to AWS Lambda with a public HTTPS Function URL: **[live Swagger UI](https://fcwkvdgi7lo2hp2xtfmyxzieia0xmfwr.lambda-url.us-east-1.on.aws/docs)**.
+
+```
 Internet → Lambda Function URL → Lambda container → Mangum → FastAPI (XGBoost + SHAP)
-↑
-Image stored in ECR (~1.1 GB)
+                                        ↑
+                               Image stored in ECR (~1.1 GB)
+```
+
 Key engineering decisions:
 
 - **Mangum ASGI adapter** translates Lambda events to ASGI requests, allowing the same FastAPI code to run locally via uvicorn and serverlessly on Lambda — no application logic changes between environments. Three new lines in `src/app.py`.
@@ -326,10 +331,9 @@ A few engineering and methodological issues debugged during build, included here
 
 ## License
 
-MIT.See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
 
 ---
-
 ## Contact
 
 [Shrikant Sharma](https://www.linkedin.com/in/shrikant-sharma) · GitHub: [@Shrikant-Sharma](https://github.com/Shrikant-Sharma)
