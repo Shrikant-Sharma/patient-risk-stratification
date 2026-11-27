@@ -1,6 +1,7 @@
 # Model card: heart disease risk model, version xgb_v2
 
-Built November 23, 2026. A portfolio project on a public research file. It is not a medical device, it
+Built November 23, 2026. Trained and measured again on my own machine on November 26, 2026: every number
+here is from that run. A portfolio project on a public research file. It is not a medical device, it
 has not been validated for clinical use, and it must not be used on real patients.
 
 ## What it is
@@ -28,19 +29,21 @@ folds. The settings that won are in `models/model_metadata.json`.
 
 | Measure | Value | From |
 |---|---|---|
-| AUC, nested cross-validation | 0.886 (folds from 0.815 to 0.927) | 15 outer folds on the 242 |
-| AUC, test | 0.946 (95% interval 0.884 to 0.990) | the 61, scored once |
-| Recall at the served threshold | 0.96 (0.91 to 0.99): 107 of 111 | out-of-fold, the 242 |
-| Precision at the served threshold | 0.59 (0.52 to 0.66): 107 of 181 flagged | out-of-fold, the 242 |
-| Test, at the served threshold | 28 of 28 caught, 19 false alarms among 33 without disease | the 61, scored once |
-| Brier score | 0.141 out-of-fold, 0.100 on the 61 | |
+| AUC, nested cross-validation | 0.888 (folds from 0.809 to 0.928) | 15 outer folds on the 242 |
+| AUC, test | 0.957 (95% interval 0.899 to 0.995) | the 61, scored once |
+| Recall at the served threshold | 0.92 (0.85 to 0.96): 102 of 111 | out-of-fold, the 242 |
+| Precision at the served threshold | 0.63 (0.55 to 0.70): 102 of 162 flagged | out-of-fold, the 242 |
+| Test, at the served threshold | 27 of 28 caught, 13 false alarms among 33 without disease | the 61, scored once |
+| Brier score | 0.143 out-of-fold, 0.092 on the 61 | |
 
-The number to quote is 0.886. The test set gives 0.946, and its interval runs from 0.88 to 0.99: with 61
+The number to quote is 0.888. The test set gives 0.957, and its interval runs from 0.90 to 0.995: with 61
 patients it cannot say more than that. The 61 are an easier draw than the average fold.
 
-The served threshold is 0.136. It comes from counting one missed patient as 3 false alarms, which is a
-placeholder until the owner decides (`DECISIONS.md`, decision 1). At that threshold three of every four
-patients are flagged.
+The served threshold is 0.222. It comes from counting one missed patient as 3 false alarms, which the
+owner decided on November 26, 2026 (`DECISIONS.md`, decision 1). At that threshold two of every three
+patients are flagged. The place of the threshold is not a precise number: when the 242 patients are
+resampled, the lowest-cost cut at 3 to 1 runs from 0.12 to 0.59. Recall at the served cut runs from 0.87
+to 0.97 over the same resamples.
 
 ## By sex
 
@@ -48,16 +51,16 @@ Out-of-fold, at the served threshold:
 
 | | Patients | With disease | Caught | False alarms among those without disease | AUC |
 |---|---|---|---|---|---|
-| Women | 77 | 18 | 17 | 29 of 59 | 0.842 |
-| Men | 165 | 93 | 90 | 45 of 72 | 0.856 |
+| Women | 77 | 18 | 15 | 21 of 59 | 0.843 |
+| Men | 165 | 93 | 87 | 39 of 72 | 0.850 |
 
-Only 18 women with disease are in the training data. The interval on 17 of 18 runs from 0.73 to 1.00.
+Only 18 women with disease are in the training data. The interval on 15 of 18 runs from 0.59 to 0.96.
 This file cannot show that the model works equally well for women.
 
 ## What carries the model
 
-Share of the mean absolute SHAP value on the training patients: thallium test result (thal) 25%, vessels
-colored (ca) 20%, chest pain type (cp) 18%. Those three hold 63%.
+Share of the mean absolute SHAP value on the training patients: thallium test result (thal) 23%, vessels
+colored (ca) 21%, chest pain type (cp) 18%. Those three hold 61%.
 
 ## Limits
 
@@ -87,12 +90,13 @@ Retrain when any of these holds:
 1. The weekly check reports a drift alert two weeks running, and the cause is a real change in who
    arrives or how an input is measured, not a fault upstream. A fault upstream is fixed upstream.
 2. Outcomes become available, and on 100 or more labeled patients recall at the served threshold is
-   under 0.91, the low end of the interval measured here.
+   under 0.85, the low end of the interval measured here.
 3. An input gains a code the data dictionary does not hold, or a unit changes.
 4. A year has passed since the last training.
 
 Retraining means: run `pipeline/00` to `05`, in order, on the new data. Run the tests. Compare the new
-nested AUC with 0.886: a change inside the fold spread (0.03) is not a change. Make decision 1 again on
+nested AUC with 0.888: a change inside the fold spread (0.03) is not a change. Train on the same
+operating system each time: Windows and Linux give different trees from the same seed. Make decision 1 again on
 the new table. Give the model a new version name, so the old file stays in the repository and going back
 is one line in the metadata.
 

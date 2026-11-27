@@ -9,9 +9,9 @@ A machine learning project that predicts heart disease risk from 13 clinical inp
 
 It is a portfolio project on public research data. It is not a medical device and must not be used on real patients.
 
-**Status, November 23, 2026.** Version 2 rebuilt the modeling half as scripts, corrected how the model is scored, and added monitoring. Everything in `pipeline/` and `tests/` was run on a laptop-sized machine. The API has not been deployed since the rebuild: the Render service, the weekly check and the Lambda deployment below are set up and tested locally, and their first live run is still to come. The first version's AWS Lambda address was retired in November 2026 and no longer answers.
+**Status, November 26, 2026.** Version 2 rebuilt the modeling half as scripts, corrected how the model is scored, and added monitoring. I ran every script and the 29 tests on my own Windows machine on November 26, 2026, and every number below is from that run ([results/RUN_SUMMARY.md](results/RUN_SUMMARY.md)). The same day I deployed the API on Render's free plan and pointed the AWS Lambda address of version 1 at version 2. Both passed the live check: 20 known patients, each within 0.0001 of the recorded score. Two decisions were mine to make, and I made one change of my own: see [DECISIONS.md](DECISIONS.md).
 
-**Live API:** not deployed yet. After the Render deployment, the address goes here.
+**Live API:** https://patient-risk-api.onrender.com/docs on Render (a free instance that sleeps when idle: the first request after a sleep took 27 seconds) and https://fcwkvdgi7lo2hp2xtfmyxzieia0xmfwr.lambda-url.us-east-1.on.aws/docs on AWS Lambda (first request after the update: 7 seconds). Both serve version 2 since November 26, 2026.
 
 ---
 
@@ -21,28 +21,28 @@ It is a portfolio project on public research data. It is not a medical device an
 
 | Measure | Value | Measured on |
 |---|---|---|
-| AUC, nested cross-validation | 0.886 (folds from 0.815 to 0.927) | the 242 training patients, 15 outer folds |
-| AUC, test | 0.946 (95% interval 0.884 to 0.990) | the 61 held-back patients, scored once |
-| Recall at the served threshold | 0.96 (0.91 to 0.99) | out-of-fold scores for the 242 |
-| Precision at the served threshold | 0.59 (0.52 to 0.66) | out-of-fold scores for the 242 |
-| Test, at the served threshold | 28 of 28 with disease caught, 19 false alarms among 33 without | the 61, scored once |
-| Brier score | 0.141 out-of-fold, 0.100 on the 61 | |
+| AUC, nested cross-validation | 0.888 (folds from 0.809 to 0.928) | the 242 training patients, 15 outer folds |
+| AUC, test | 0.957 (95% interval 0.899 to 0.995) | the 61 held-back patients, scored once |
+| Recall at the served threshold | 0.92 (0.85 to 0.96) | out-of-fold scores for the 242 |
+| Precision at the served threshold | 0.63 (0.55 to 0.70) | out-of-fold scores for the 242 |
+| Test, at the served threshold | 27 of 28 with disease caught, 13 false alarms among 33 without | the 61, scored once |
+| Brier score | 0.143 out-of-fold, 0.092 on the 61 | |
 
-The number to quote is 0.886. With 61 patients the test set cannot separate 0.88 from 0.99, and 28 of 28 caught still leaves room for a true rate as low as 0.88.
+The number to quote is 0.888. With 61 patients the test set cannot separate 0.90 from 0.99, and 27 of 28 caught still leaves room for a true rate as low as 0.82.
 
-The served threshold (0.136) comes from counting one missed patient as 3 false alarms. That ratio is a placeholder and an open decision: see [DECISIONS.md](DECISIONS.md). At that threshold three of every four patients are flagged.
+The served threshold (0.222) comes from counting one missed patient as 3 false alarms. That ratio is my decision, and the reason is in [DECISIONS.md](DECISIONS.md), decision 1. At that threshold two of every three patients are flagged. Where the threshold lands is the least stable number here: when the 242 patients are resampled, the lowest-cost cut at 3 to 1 runs from 0.12 to 0.59, while recall at the served cut stays between 0.87 and 0.97.
 
-Five model families were compared in the notebooks (logistic regression, random forest, XGBoost, SVM, a PyTorch network). Tuned XGBoost is the one that is served. Its three strongest inputs (`thal`, `ca`, `cp`) hold 63% of the mean absolute SHAP value, and they match what the exploratory analysis found.
+Five model families were compared in the notebooks (logistic regression, random forest, XGBoost, SVM, a PyTorch network). Tuned XGBoost is the one that is served. Its three strongest inputs (`thal`, `ca`, `cp`) hold 61% of the mean absolute SHAP value, and they match what the exploratory analysis found.
 
 ### What version 2 corrected (November 2026)
 
 | | Version 1 | Version 2 |
 |---|---|---|
-| Cross-validated AUC | 0.89, from a search run on data that SMOTE had already enlarged | 0.886, nested, with SMOTE fitted inside each training fold |
-| Size of that leak | not measured | small: like for like, 0.917 with the leak and 0.896 without. SMOTE added only 20 rows |
+| Cross-validated AUC | 0.89, from a search run on data that SMOTE had already enlarged | 0.888, nested, with SMOTE fitted inside each training fold |
+| Size of that leak | not measured | small: like for like, 0.918 with the leak and 0.899 without. SMOTE added only 20 rows |
 | Headline score | test AUC 0.95, on 61 patients | the cross-validated score, with the test score and its interval beside it |
-| Threshold | 0.423, picked on the 61 test patients | 0.136, from a stated cost ratio, picked on out-of-fold scores |
-| Recall and precision | 0.93 and 0.81, on the same 61 the threshold was picked on | 0.96 and 0.59 out-of-fold. Version 1's cut gives 0.81 and 0.73 there |
+| Threshold | 0.423, picked on the 61 test patients | 0.222, from a stated cost ratio, picked on out-of-fold scores |
+| Recall and precision | 0.93 and 0.81, on the same 61 the threshold was picked on | 0.92 and 0.63 out-of-fold. Version 1's cut gives 0.83 and 0.72 there |
 | Calibration | Platt scaling against the raw score, on the test set | raw, Platt and isotonic, each cross-fitted. The raw score is served |
 | Causal refutation checks | run on DoWhy's default estimator (2.04 kg) | run on the estimator that gives the headline 3.27 kg |
 | Starting the API from a fresh clone | failed: a pickled explainer was not in the repository | works: the trees and one JSON file |
@@ -104,8 +104,9 @@ patient-risk-stratification/
 ├── notebooks/                            01 to 05: how the project was first built
 ├── reports/figures/                      Plots from the notebooks
 ├── .github/workflows/                    tests.yml (every push), weekly_check.yml (Mondays)
+├── run_all.py                            Runs every step in order and keeps a log
 ├── decision.json                         The cost ratio that sets the threshold
-├── DECISIONS.md                          Two open decisions and nineteen built in
+├── DECISIONS.md                          My two decisions, my own change, and nineteen choices built in
 ├── MODEL_CARD.md                         Data, scores, limits, monitoring, retraining rules
 ├── render.yaml                           Render blueprint
 ├── Dockerfile, Dockerfile.lambda         Local image and Lambda image
@@ -146,12 +147,12 @@ The top three (RF, SVM, XGBoost) were tuned with RandomizedSearchCV over 5 folds
 
 | Recipe | Cross-validated AUC | Test AUC (61 patients) |
 |---|---|---|
-| A. The notebooks' way: SMOTE once, then the search. The notebooks' folds | 0.890 (the search's best draw) | 0.960 |
-| A. The same, on shuffled folds | 0.917 (the search's best draw) | 0.950 |
-| B. SMOTE inside the folds | 0.896 (best draw), **0.886 nested** | 0.946 |
-| C. No resampling | 0.895 (best draw), 0.877 nested | 0.936 |
+| A. The notebooks' way: SMOTE once, then the search. The notebooks' folds | 0.887 (the search's best draw) | 0.950 |
+| A. The same, on shuffled folds | 0.918 (the search's best draw) | 0.947 |
+| B. SMOTE inside the folds | 0.899 (best draw), **0.888 nested** | 0.957 |
+| C. No resampling | 0.899 (best draw), 0.875 nested | 0.949 |
 
-Three things follow. The leak was real and small: 0.917 against 0.896 on like-for-like folds, because SMOTE only added 20 rows to 242. A search's best draw flatters itself, so the number to quote is the nested one, where the whole search runs again inside each outer fold. And SMOTE earns 0.009 of AUC here, beside a fold-to-fold spread of 0.03: it stays by a rule that was set before the numbers, and the classes (111 to 131) hardly needed it.
+Three things follow. The leak was real and small: 0.918 against 0.899 on like-for-like folds, because SMOTE only added 20 rows to 242. A search's best draw flatters itself, so the number to quote is the nested one, where the whole search runs again inside each outer fold. And SMOTE earns 0.013 of AUC here, beside a fold-to-fold spread of 0.03: it stays by a rule that was set before the numbers, and the classes (111 to 131) hardly needed it.
 
 ![Model Comparison](reports/figures/model_comparison.png)
 
@@ -175,15 +176,15 @@ Both choices are made on out-of-fold scores: each of the 242 training patients i
 
 | | Brier score, out-of-fold | Average gap between predicted and observed |
 |---|---|---|
-| Raw score | 0.141 | 0.040 |
-| Platt scaling | 0.140 | 0.056 |
-| Isotonic regression | 0.137 | 0.030 |
+| Raw score | 0.143 | 0.049 |
+| Platt scaling | 0.142 | 0.069 |
+| Isotonic regression | 0.151 | 0.049 |
 
-The rule was fixed first: the raw score is served unless a calibrator lowers the Brier score by more than chance. Neither did (the 95% intervals of both differences include zero), so the raw score is served. The reliability curve from the notebooks:
+The rule was fixed first: the raw score is served unless a calibrator lowers the Brier score by more than chance. Neither did: Platt scaling was level with the raw score, isotonic regression was worse, and the 95% intervals of both differences include zero. So the raw score is served. The reliability curve from the notebooks:
 
 ![Reliability Curve](reports/figures/calibration_comparison.png)
 
-**Threshold.** The threshold follows from one judgment: how many false alarms one missed patient is worth. The table is in [DECISIONS.md](DECISIONS.md), decision 1. At the placeholder of 3 to 1 the threshold is 0.136: out-of-fold it catches 107 of 111 patients with disease and flags 74 of 131 without. Version 1 picked 0.423 on the test set and reported recall 0.93 on the same 61 patients. On out-of-fold scores that cut catches 90 of 111, a recall of 0.81.
+**Threshold.** The threshold follows from one judgment: how many false alarms one missed patient is worth. The table is in [DECISIONS.md](DECISIONS.md), decision 1. At my ratio of 3 to 1 the threshold is 0.222: out-of-fold it catches 102 of 111 patients with disease and flags 60 of 131 without. Version 1 picked 0.423 on the test set and reported recall 0.93 on the same 61 patients. On out-of-fold scores that cut catches 92 of 111, a recall of 0.83. My own change (`pipeline/07_threshold_bootstrap.py`) resamples the 242 patients and shows how far each cut moves: the table is in DECISIONS.md.
 
 ### 6. Serving and Monitoring
 
@@ -219,9 +220,9 @@ This is a replay. There is no live traffic, and no outcome labels arrive at the 
 
 **Deployment.** Three ways to run the same code:
 
-- **Render** (`render.yaml`): a free web service, 512 MB. The API uses about 140 MB. It sleeps after 15 minutes without traffic and takes about a minute to wake, and its disk is cleared on restart, so the request log there is short-lived.
+- **Render** (`render.yaml`): a free web service, 512 MB. Live since November 26, 2026: the build took 1 minute 34 seconds. It sleeps after 15 minutes without traffic, the first request after a sleep took 27 seconds, and its disk is cleared on restart, so the request log there is short-lived.
 - **Docker** (`Dockerfile`): multi-stage build, slim Python base, non-root user, health check.
-- **AWS Lambda** (`Dockerfile.lambda`): AWS's Python 3.13 base image, with Mangum turning a Lambda event into a request. Version 1 ran this way behind a public Function URL until November 2026. Its image was about 1.1 GB because it carried the shap library and scikit-learn. Version 2's image needs neither.
+- **AWS Lambda** (`Dockerfile.lambda`): AWS's Python 3.13 base image, with Mangum turning a Lambda event into a request. Version 1 ran this way behind a public Function URL from May 2026. On November 26, 2026 I pushed version 2's image to the same repository and pointed the same function at it, so the address did not change. The image is 745 MB as stored, the first request after the update took 7 seconds, and later requests about 0.13 seconds. Version 1's image is kept as the way back.
 
 ### 7. Causal Inference: ATT of Smoking Cessation on Weight Change
 
@@ -310,7 +311,9 @@ python pipeline/05_drift_monitor.py --replay
 python pipeline/05_drift_monitor.py --limits
 ```
 
-With the pinned packages on Python 3.13 these reproduce the files in `results/` and `models/`.
+`python run_all.py` runs all of these in order, then the API check and the tests, and writes `results/run_log.txt`. `python pipeline/07_threshold_bootstrap.py` is my own change and runs after step 02.
+
+With the pinned packages on Python 3.13 these reproduce the files in `results/` and `models/` on the same operating system: mine is Windows 11. Across Windows and Linux every number that passes through an XGBoost fit differs in the second or third decimal, because XGBoost's row and column sampling draws a different sample on the two systems with the same seed. Scoring does not differ: the model file trained on Windows gives the recorded scores on Linux. [results/RUN_SUMMARY.md](results/RUN_SUMMARY.md) sets my run beside the Linux reference run, row by row.
 
 ### The API
 
@@ -354,13 +357,17 @@ A few engineering and methodological issues debugged during build, included here
 
 **8. Container image format mismatch breaks Lambda deployment.** Docker Desktop's BuildKit defaults to OCI manifest lists with provenance attestations, perfectly valid for most registries, but Lambda's container runtime only accepts Docker V2 Schema 2 single-manifest format. The deploy failed with `InvalidParameterValueException: image manifest, config or layer media type ... is not supported`. Fix: rebuild with `--provenance=false`. Lesson: container registry standards aren't uniform; downstream consumers (Lambda, ECS, Kubernetes runtimes) accept different subsets of OCI/Docker manifest schemas, and "it works on my registry" is necessary but not sufficient.
 
-**9. A score is only as honest as the data it was picked on (version 2).** Version 1 picked its threshold on the 61 test patients and reported recall on the same 61: 0.93. On patients the model had not seen, the same cut gives 0.81. Nothing in the code was wrong. The number was simply measured on the data that chose it.
+**9. A score is only as honest as the data it was picked on (version 2).** Version 1 picked its threshold on the 61 test patients and reported recall on the same 61: 0.93. On patients the model had not seen, the same cut gives 0.83. Nothing in the code was wrong. The number was simply measured on the data that chose it.
 
 **10. Measure the leak before describing it (version 2).** SMOTE before cross-validation is a textbook leak, and the first draft of this correction assumed it had inflated the score. Measured like for like, it was worth about 0.02 of AUC, because SMOTE added 20 rows to 242. The structure was wrong and is fixed. The reported 0.89 held up.
 
 **11. A check has to run on the thing it is checking (version 2).** Three refutation tests "all passed", on a different estimator from the one in the headline. Wrapping the estimator in one function made it possible to test, and showed that it is steadier in sign than in its second decimal.
 
 **12. Textbook limits assume a sample size (version 2).** A PSI limit of 0.10 alerts three times in four at 50 requests when nothing has changed. Limits measured at the window size do not.
+
+**13. The same seed is not the same model on another system (my run, November 2026).** The build's reference numbers came from Linux. My Windows run of the same code, packages and seeds gave a nested AUC of 0.888 against 0.886, and a threshold of 0.222 against 0.136. The cause was XGBoost's sampling, which I confirmed in tree 1: 219 of 262 rows kept on Windows, 218 on Linux. Lesson: say which system a number came from, and treat a second system as a second draw.
+
+**14. The threshold is the least stable number (my run, November 2026).** Two runs of one recipe put the 3 to 1 cut at 0.222 and 0.136. Resampling the 242 patients puts it anywhere from 0.12 to 0.59. Recall at the cut is steadier, 0.87 to 0.97. Lesson: quote what the cut delivers, with its interval, and not the cut itself.
 
 ---
 
@@ -369,8 +376,8 @@ A few engineering and methodological issues debugged during build, included here
 ### Predictive Modeling
 
 - **303 patients from one clinic, decades old, all referred for angiography.** The model has never seen a patient who was not already suspected of heart disease, and nothing here measures how it does elsewhere.
-- **The test set has 61 patients.** Its AUC interval runs from 0.88 to 0.99. The cross-validated score is the one to rely on.
-- **Only 18 women with disease are in the training data.** Out-of-fold the model caught 17 of them, an interval from 0.73 to 1.00. This file cannot show the model works equally well for women. The by-sex table is in [MODEL_CARD.md](MODEL_CARD.md).
+- **The test set has 61 patients.** Its AUC interval runs from 0.90 to 0.995. The cross-validated score is the one to rely on.
+- **Only 18 women with disease are in the training data.** Out-of-fold the model caught 15 of them, an interval from 0.59 to 0.96. This file cannot show the model works equally well for women. The by-sex table is in [MODEL_CARD.md](MODEL_CARD.md).
 - **The monitoring has only seen replayed patients.** The drift check, the request log and the retraining rules are built and tested. No live traffic and no outcome labels exist, so no rule has fired.
 - **The free hosting plan clears the request log on restart.** Keeping it would need a database or object storage.
 

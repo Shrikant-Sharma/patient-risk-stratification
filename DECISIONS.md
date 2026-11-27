@@ -1,14 +1,14 @@
 # Decisions
 
-Version 2 of this project leaves two decisions open. They are yours. For each one this file gives the
-question, the options, what each option costs and gains, and where the evidence is. Write the choice and
-the reason in the space at the end of each. Part 2 lists the choices that are already built in, with their
-reasons, so you can defend them or change them.
+Version 2 of this project left two decisions open for me. For each one this file gives the question, the
+options, what each option costs and gains, where the evidence is, and then my choice and its reason. One
+change of my own follows them. Part 2 lists the choices that were already built in, with their reasons.
 
-Every number here was measured in the build of November 23, 2026, on Python 3.13 with the pinned
-packages. A number becomes yours when your own run reproduces it.
+Every number here is from my own run of November 26, 2026, on Windows 11 and Python 3.13 with the pinned
+packages. The build's reference run of November 23 was on Linux and gave slightly different numbers:
+`results/RUN_SUMMARY.md` sets the two side by side and says why.
 
-## Part 1. Open decisions
+## Part 1. My two decisions and my own change
 
 ### Decision 1. What a miss costs against a false alarm
 
@@ -129,12 +129,12 @@ served model because of this. The full output is `results/threshold_bootstrap.js
 
 | # | The choice | Why | What it costs |
 |---|---|---|---|
-| 1 | Imputing and SMOTE sit inside one pipeline with the model | In cross-validation they are then fitted on the training folds only. In version 1 SMOTE ran once before the search, so a synthetic patient could sit in training while the real patient it was built from was scored | Little, as it turned out. SMOTE added only 20 rows to 242, so the leak was small: like for like, 0.917 with the leak and 0.896 without. Version 1's reported 0.89 holds up |
+| 1 | Imputing and SMOTE sit inside one pipeline with the model | In cross-validation they are then fitted on the training folds only. In version 1 SMOTE ran once before the search, so a synthetic patient could sit in training while the real patient it was built from was scored | Little, as it turned out. SMOTE added only 20 rows to 242, so the leak was small: like for like, 0.918 with the leak and 0.899 without. Version 1's reported 0.89 holds up |
 | 2 | The score that is quoted comes from nested cross-validation, repeated three times | The search picks the best of 40 draws. The best draw's own score is flattered by the picking. Nesting scores the whole recipe | 15 searches where version 1 ran one, about two minutes |
-| 3 | SMOTE stays, by a rule set before the numbers | With SMOTE inside the folds the nested AUC is 0.886, without it 0.877. The rule was: the simpler recipe unless resampling is ahead by more than one standard error | The gain is small beside a fold-to-fold spread of 0.03. The classes are 111 to 131 in training, so there was little to balance |
+| 3 | SMOTE stays, by a rule set before the numbers | With SMOTE inside the folds the nested AUC is 0.888, without it 0.875. The rule was: the simpler recipe unless resampling is ahead by more than one standard error | The gain is small beside a fold-to-fold spread of 0.03. The classes are 111 to 131 in training, so there was little to balance |
 | 4 | The threshold and the calibration are chosen on out-of-fold scores | Each of the 242 patients is scored by a model that never saw that patient, so the 61 test patients stay unseen until the end | The out-of-fold models differ a little from the served one |
-| 5 | The 61 test patients are scored once, and reported with exact intervals | 28 of 28 caught sounds like certainty. The exact interval says the true rate could be as low as 0.88 | A less impressive sentence |
-| 6 | The raw score is served, with no calibration layer | Neither Platt scaling nor isotonic regression lowered the Brier score by more than chance. The rule was fixed first | Isotonic looked a little better (0.137 against 0.141) and was not taken |
+| 5 | The 61 test patients are scored once, and reported with exact intervals | 27 of 28 caught sounds close to certainty. The exact interval says the true rate could be as low as 0.82 | A less impressive sentence |
+| 6 | The raw score is served, with no calibration layer | Neither Platt scaling nor isotonic regression lowered the Brier score by more than chance. The rule was fixed first | None in my run: isotonic was worse (0.151 against 0.143) and Platt was level (0.142). In the Linux reference run isotonic looked a little better and was still not taken |
 | 7 | The model is served from XGBoost's own file and one JSON metadata file | A pickle loads only under the library versions that wrote it, and loading one can run code. Version 1 needed a pickled explainer that was not in the repository | The calibration and the drift check had to be written as plain arithmetic |
 | 8 | SHAP values come from XGBoost itself (`pred_contribs`) | The same exact tree SHAP values, without the shap library and its dependencies. A test checks them against the shap library | The API image has no shap plots |
 | 9 | The feature order is read from the metadata | Version 1 had the order written twice, once in training and once in the API | None |
@@ -146,5 +146,5 @@ served model because of this. The full output is `results/threshold_bootstrap.js
 | 15 | Drift limits are measured at the window size, not taken from a textbook | See decision 2 | The limits depend on 242 training patients |
 | 16 | The causal checks wrap the whole estimator in one function | A placebo test has to refit the propensity model and match again. Version 1 ran DoWhy's refuters on DoWhy's own estimator (2.04 kg), not on the one that gave the headline 3.27 kg | The DoWhy framing is no longer what the checks run on |
 | 17 | Two intervals are shown for the causal estimate | The pairs-only interval treats the matching as fixed. The other resamples people and matches again | Bootstrap intervals for matching are approximate, and the text says so |
-| 18 | Render's free plan serves the API | No card and no bill. Tests run on each push and a check runs each week from GitHub Actions | The service sleeps after 15 minutes, takes about a minute to wake, and loses its log on restart |
-| 19 | The Lambda files stay, and Lambda is a one-time deployment | It is the same code behind a different front door, and worth doing once | Nothing runs there afterwards |
+| 18 | Render's free plan serves the API | No card and no bill. Tests run on each push and a check runs each week from GitHub Actions | The service sleeps after 15 minutes, took 27 seconds to wake when I measured it, and loses its log on restart |
+| 19 | The Lambda function of version 1 stays, and now runs version 2 | Its address is the one I had already shared, so on November 26, 2026 I pointed the same function at version 2's image. No new function, and version 1's image is kept as the way back | One function stays live. It bills for requests only, and a few cents a month for the stored images |

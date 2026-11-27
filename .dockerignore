@@ -43,3 +43,8 @@ tests/
 # OS junk
 .DS_Store
 Thumbs.db
+
+# Version 1 model files that are not in git. The version 2 image must not carry them.
+models/*.pkl
+models/*.joblib
+models/*.pt
