@@ -125,13 +125,45 @@ stays near 0.9. So I quote the recall with its interval, I do not present 0.222 
 and before any real use the threshold would be set again on more patients. Nothing was changed in the
 served model because of this. The full output is `results/threshold_bootstrap.json`.
 
+### Two checks at the close (November 27, 2026)
+
+**Weighting beside matching.** I had said weighting would be steadier than matching without measuring it.
+`python pipeline/08_weighting_check.py` uses the same propensity model and gives both estimators the same
+noise variable, the same 80% of people and the same shuffle in each of 200 runs.
+
+| Check | Matching, middle 95% of runs | Weighting, middle 95% of runs |
+|---|---|---|
+| A made-up confounder added | +2.92 to +3.90 kg | +3.29 to +3.39 kg |
+| A random 80% of people | +2.55 to +4.16 kg | +2.89 to +3.80 kg |
+| Placebo: who quit is shuffled | -0.99 to +0.84 kg | -0.89 to +0.84 kg |
+
+On all 1,566 people matching gives +3.27 kg and weighting +3.34 kg. So the claim holds for the noise
+check, where weighting's spread is about a thirteenth of matching's. On a subset it is steadier by less,
+and on the placebo the two are alike. The headline stays the matched estimate, as the notebooks built it.
+
+**The seed rule.** Two sentences quoted a gain of one trained recipe over another from one seed.
+`python pipeline/09_seed_check.py` trains both sides again on five seeds. The split and the outer folds
+stay fixed.
+
+| Seed | Nested AUC with SMOTE | Without | SMOTE's gain | The leak |
+|---|---|---|---|---|
+| 42, the project's | 0.888 | 0.875 | +0.013 | +0.019 |
+| 7 | 0.879 | 0.881 | -0.002 | -0.004 |
+| 11 | 0.879 | 0.878 | +0.001 | +0.004 |
+| 23 | 0.874 | 0.875 | -0.001 | -0.003 |
+| 101 | 0.881 | 0.885 | -0.004 | +0.015 |
+
+Both ranges cross zero, so neither is quoted as a gain any more. The nested AUC itself runs from 0.874 to
+0.888, and the project's seed is the top of that range, so 0.88 is the fair round number. The served
+model was not changed: it was chosen by a rule set before the numbers, on the project's seed.
+
 ## Part 2. Decisions already built in
 
 | # | The choice | Why | What it costs |
 |---|---|---|---|
-| 1 | Imputing and SMOTE sit inside one pipeline with the model | In cross-validation they are then fitted on the training folds only. In version 1 SMOTE ran once before the search, so a synthetic patient could sit in training while the real patient it was built from was scored | Little, as it turned out. SMOTE added only 20 rows to 242, so the leak was small: like for like, 0.918 with the leak and 0.899 without. Version 1's reported 0.89 holds up |
+| 1 | Imputing and SMOTE sit inside one pipeline with the model | In cross-validation they are then fitted on the training folds only. In version 1 SMOTE ran once before the search, so a synthetic patient could sit in training while the real patient it was built from was scored | Little, as it turned out. SMOTE added only 20 rows to 242, so the leak was too small to measure: over five seeds the leaky search scored between 0.004 lower and 0.019 higher than the clean one. Version 1's reported 0.89 holds up |
 | 2 | The score that is quoted comes from nested cross-validation, repeated three times | The search picks the best of 40 draws. The best draw's own score is flattered by the picking. Nesting scores the whole recipe | 15 searches where version 1 ran one, about two minutes |
-| 3 | SMOTE stays, by a rule set before the numbers | With SMOTE inside the folds the nested AUC is 0.888, without it 0.875. The rule was: the simpler recipe unless resampling is ahead by more than one standard error | The gain is small beside a fold-to-fold spread of 0.03. The classes are 111 to 131 in training, so there was little to balance |
+| 3 | SMOTE stays, by a rule set before the numbers | With SMOTE inside the folds the nested AUC is 0.888, without it 0.875. The rule was: the simpler recipe unless resampling is ahead by more than one standard error | On five seeds SMOTE's gain runs from -0.004 to +0.013, and the rule chose it on one seed of five, the project's own. So I do not claim SMOTE helps. The classes are 111 to 131 in training, so there was little to balance |
 | 4 | The threshold and the calibration are chosen on out-of-fold scores | Each of the 242 patients is scored by a model that never saw that patient, so the 61 test patients stay unseen until the end | The out-of-fold models differ a little from the served one |
 | 5 | The 61 test patients are scored once, and reported with exact intervals | 27 of 28 caught sounds close to certainty. The exact interval says the true rate could be as low as 0.82 | A less impressive sentence |
 | 6 | The raw score is served, with no calibration layer | Neither Platt scaling nor isotonic regression lowered the Brier score by more than chance. The rule was fixed first | None in my run: isotonic was worse (0.151 against 0.143) and Platt was level (0.142). In the Linux reference run isotonic looked a little better and was still not taken |

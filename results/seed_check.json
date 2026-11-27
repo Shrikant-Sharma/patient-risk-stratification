@@ -1,0 +1,99 @@
+{
+ "quick": false,
+ "seeds": [
+  42,
+  7,
+  11,
+  23,
+  101
+ ],
+ "by_seed": [
+  {
+   "seed": 42,
+   "nested_with_smote": 0.887543025948823,
+   "nested_without": 0.8750157652331564,
+   "smote_gain": 0.012527260715666566,
+   "standard_error": 0.008090177981876322,
+   "smote_chosen_by_the_rule": true,
+   "best_draw_with_leak": 0.9177405215866756,
+   "best_draw_without_leak": 0.8985425604990823,
+   "leak": 0.019197961087593307,
+   "test_auc_with_smote": 0.9567099567099566
+  },
+  {
+   "seed": 7,
+   "nested_with_smote": 0.8793263365727134,
+   "nested_without": 0.8814049074918642,
+   "smote_gain": -0.0020785709191507573,
+   "standard_error": 0.007150177451079405,
+   "smote_chosen_by_the_rule": false,
+   "best_draw_with_leak": 0.8983289502520272,
+   "best_draw_without_leak": 0.9020418792157923,
+   "leak": -0.003712928963765072,
+   "test_auc_with_smote": 0.9469696969696969
+  },
+  {
+   "seed": 11,
+   "nested_with_smote": 0.8785382625962335,
+   "nested_without": 0.8776152457311878,
+   "smote_gain": 0.0009230168650457005,
+   "standard_error": 0.008249582727204456,
+   "smote_chosen_by_the_rule": false,
+   "best_draw_with_leak": 0.9043666447512602,
+   "best_draw_without_leak": 0.9007879801358063,
+   "leak": 0.0035786646154538637,
+   "test_auc_with_smote": 0.9507575757575757
+  },
+  {
+   "seed": 23,
+   "nested_with_smote": 0.8741391056608449,
+   "nested_without": 0.8752609709131448,
+   "smote_gain": -0.0011218652522999584,
+   "standard_error": 0.008206902455641398,
+   "smote_chosen_by_the_rule": false,
+   "best_draw_with_leak": 0.8974249397326322,
+   "best_draw_without_leak": 0.9007736225127531,
+   "leak": -0.003348682780120904,
+   "test_auc_with_smote": 0.9567099567099568
+  },
+  {
+   "seed": 101,
+   "nested_with_smote": 0.8805014094869167,
+   "nested_without": 0.8848650946477034,
+   "smote_gain": -0.004363685160786668,
+   "standard_error": 0.006810035826171452,
+   "smote_chosen_by_the_rule": false,
+   "best_draw_with_leak": 0.9122287968441816,
+   "best_draw_without_leak": 0.8976712498451629,
+   "leak": 0.014557546999018678,
+   "test_auc_with_smote": 0.9534632034632035
+  }
+ ],
+ "smote_gain": {
+  "low": -0.004363685160786668,
+  "high": 0.012527260715666566,
+  "mean": 0.0011772312496949767
+ },
+ "leak": {
+  "low": -0.003712928963765072,
+  "high": 0.019197961087593307,
+  "mean": 0.006054512191635974
+ },
+ "nested_with_smote": {
+  "low": 0.8741391056608449,
+  "high": 0.887543025948823,
+  "mean": 0.8800096280531063
+ },
+ "nested_without": {
+  "low": 0.8750157652331564,
+  "high": 0.8848650946477034,
+  "mean": 0.8788323968034113
+ },
+ "test_auc_with_smote": {
+  "low": 0.9469696969696969,
+  "high": 0.9567099567099568,
+  "mean": 0.952922077922078
+ },
+ "seeds_where_the_rule_chose_smote": 1,
+ "seconds": 388
+}

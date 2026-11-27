@@ -28,7 +28,7 @@ It is a portfolio project on public research data. It is not a medical device an
 | Test, at the served threshold | 27 of 28 with disease caught, 13 false alarms among 33 without | the 61, scored once |
 | Brier score | 0.143 out-of-fold, 0.092 on the 61 | |
 
-The number to quote is 0.888. With 61 patients the test set cannot separate 0.90 from 0.99, and 27 of 28 caught still leaves room for a true rate as low as 0.82.
+The number to quote is 0.888, from the project's seed. Over five training seeds it runs from 0.874 to 0.888, so 0.88 is the fair round number. With 61 patients the test set cannot separate 0.90 from 0.99, and 27 of 28 caught still leaves room for a true rate as low as 0.82.
 
 The served threshold (0.222) comes from counting one missed patient as 3 false alarms. That ratio is my decision, and the reason is in [DECISIONS.md](DECISIONS.md), decision 1. At that threshold two of every three patients are flagged. Where the threshold lands is the least stable number here: when the 242 patients are resampled, the lowest-cost cut at 3 to 1 runs from 0.12 to 0.59, while recall at the served cut stays between 0.87 and 0.97.
 
@@ -39,7 +39,7 @@ Five model families were compared in the notebooks (logistic regression, random 
 | | Version 1 | Version 2 |
 |---|---|---|
 | Cross-validated AUC | 0.89, from a search run on data that SMOTE had already enlarged | 0.888, nested, with SMOTE fitted inside each training fold |
-| Size of that leak | not measured | small: like for like, 0.918 with the leak and 0.899 without. SMOTE added only 20 rows |
+| Size of that leak | not measured | too small to measure: over five seeds the leaky search scored between 0.004 lower and 0.019 higher than the clean one. SMOTE added only 20 rows |
 | Headline score | test AUC 0.95, on 61 patients | the cross-validated score, with the test score and its interval beside it |
 | Threshold | 0.423, picked on the 61 test patients | 0.222, from a stated cost ratio, picked on out-of-fold scores |
 | Recall and precision | 0.93 and 0.81, on the same 61 the threshold was picked on | 0.92 and 0.63 out-of-fold. Version 1's cut gives 0.83 and 0.72 there |
@@ -60,7 +60,7 @@ Five model families were compared in the notebooks (logistic regression, random 
 | Survival: Cox PH against a random survival forest | Test-set concordance | **0.802 / 0.804** |
 | Survival: PH assumption | Schoenfeld residuals | All 10 covariates passed |
 
-The unadjusted difference was +2.54 kg. After adjustment, matching gives +3.27 kg and G-computation +3.47 kg, beside the +3.4 to +3.5 kg that Hernán and Robins report with inverse probability weighting. The unadjusted Kaplan-Meier comparison showed quitters with worse survival (log-rank p = 0.005), which the adjusted Cox model explains by age.
+The unadjusted difference was +2.54 kg. After adjustment, matching gives +3.27 kg and G-computation +3.47 kg, beside the +3.4 to +3.5 kg that Hernán and Robins report with inverse probability weighting. My own weighting estimate, with the same propensity model as the matching, gives +3.34 kg. The unadjusted Kaplan-Meier comparison showed quitters with worse survival (log-rank p = 0.005), which the adjusted Cox model explains by age.
 
 ---
 
@@ -141,7 +141,7 @@ Five model families trained and logged to MLflow with hyperparameters, metrics, 
 - SVM (RBF kernel)
 - PyTorch feedforward NN (3 layers, dropout, ReLU)
 
-The top three (RF, SVM, XGBoost) were tuned with RandomizedSearchCV over 5 folds. XGBoost was chosen for serving on its cross-validated score and on what serving it needs (exact SHAP values from the library itself, one model file).
+The top three (RF, SVM, XGBoost) were tuned with RandomizedSearchCV over 5 folds. XGBoost was chosen for serving on what serving it needs (exact SHAP values from the library itself, one model file). The families were not compared across seeds, so no family is claimed to beat another.
 
 `pipeline/01_evaluate.py` then scores the XGBoost recipe three ways:
 
@@ -152,7 +152,7 @@ The top three (RF, SVM, XGBoost) were tuned with RandomizedSearchCV over 5 folds
 | B. SMOTE inside the folds | 0.899 (best draw), **0.888 nested** | 0.957 |
 | C. No resampling | 0.899 (best draw), 0.875 nested | 0.949 |
 
-Three things follow. The leak was real and small: 0.918 against 0.899 on like-for-like folds, because SMOTE only added 20 rows to 242. A search's best draw flatters itself, so the number to quote is the nested one, where the whole search runs again inside each outer fold. And SMOTE earns 0.013 of AUC here, beside a fold-to-fold spread of 0.03: it stays by a rule that was set before the numbers, and the classes (111 to 131) hardly needed it.
+The table is one seed. `pipeline/09_seed_check.py` trains both sides of each comparison again on five seeds (November 27, 2026), and three things follow. The leak was wrong in structure and too small to measure: the leaky search's best score was between 0.004 lower and 0.019 higher than the clean one, because SMOTE only added 20 rows to 242. A search's best draw flatters itself, so the number to quote is the nested one, where the whole search runs again inside each outer fold: 0.874 to 0.888 across the seeds. And SMOTE shows no gain that holds: its nested AUC was between 0.004 lower and 0.013 higher than no resampling, and the rule set before the numbers chose it on one seed of five, the project's own. The served model keeps SMOTE because that seed's rule chose it. With classes of 111 to 131 it hardly needed it, and I do not claim it helps.
 
 ![Model Comparison](reports/figures/model_comparison.png)
 
@@ -238,6 +238,7 @@ This part asks a different kind of question: estimating *causal* effects rather 
 |---|---|---|---|
 | Propensity Score Matching | Hernán-Robins specification (quadratic confounder terms), 1:1 NN on logit-PS, 0.2-SD caliper, without replacement | +3.27 kg | [2.11, 4.43] (bootstrap) |
 | G-computation | OLS outcome model with same confounders + quadratic terms, counterfactual prediction | +3.47 kg | [2.58, 4.44] (bootstrap) |
+| Inverse probability weighting (`pipeline/08_weighting_check.py`) | The same propensity model as the matching, with weights for the quitters | +3.34 kg | no interval computed |
 | Reference: Hernán-Robins IPW | Inverse Probability Weighting on full sample | ~+3.4 to +3.5 kg | not computed here |
 
 The three estimates sit within about 0.2 kg of each other, from estimators that rest on different models.
@@ -311,7 +312,7 @@ python pipeline/05_drift_monitor.py --replay
 python pipeline/05_drift_monitor.py --limits
 ```
 
-`python run_all.py` runs all of these in order, then the API check and the tests, and writes `results/run_log.txt`. `python pipeline/07_threshold_bootstrap.py` is my own change and runs after step 02.
+`python run_all.py` runs all of these in order, then the API check and the tests, and writes `results/run_log.txt`. `python pipeline/07_threshold_bootstrap.py` is my own change and runs after step 02. `python pipeline/08_weighting_check.py` (weighting beside matching) and `python pipeline/09_seed_check.py` (five seeds, about 7 minutes) are two later checks.
 
 With the pinned packages on Python 3.13 these reproduce the files in `results/` and `models/` on the same operating system: mine is Windows 11. Across Windows and Linux every number that passes through an XGBoost fit differs in the second or third decimal, because XGBoost's row and column sampling draws a different sample on the two systems with the same seed. Scoring does not differ: the model file trained on Windows gives the recorded scores on Linux. [results/RUN_SUMMARY.md](results/RUN_SUMMARY.md) sets my run beside the Linux reference run, row by row.
 
@@ -359,15 +360,17 @@ A few engineering and methodological issues debugged during build, included here
 
 **9. A score is only as honest as the data it was picked on (version 2).** Version 1 picked its threshold on the 61 test patients and reported recall on the same 61: 0.93. On patients the model had not seen, the same cut gives 0.83. Nothing in the code was wrong. The number was simply measured on the data that chose it.
 
-**10. Measure the leak before describing it (version 2).** SMOTE before cross-validation is a textbook leak, and the first draft of this correction assumed it had inflated the score. Measured like for like, it was worth about 0.02 of AUC, because SMOTE added 20 rows to 242. The structure was wrong and is fixed. The reported 0.89 held up.
+**10. Measure the leak before describing it (version 2).** SMOTE before cross-validation is a textbook leak, and the first draft of this correction assumed it had inflated the score. Measured like for like on five seeds, it was worth between -0.004 and +0.019 of AUC, which is nothing I can tell from zero, because SMOTE added 20 rows to 242. The structure was wrong and is fixed. The reported 0.89 held up.
 
-**11. A check has to run on the thing it is checking (version 2).** Three refutation tests "all passed", on a different estimator from the one in the headline. Wrapping the estimator in one function made it possible to test, and showed that it is steadier in sign than in its second decimal.
+**11. A check has to run on the thing it is checking (version 2).** Three refutation tests "all passed", on a different estimator from the one in the headline. Wrapping the estimator in one function made it possible to test, and showed that it is steadier in sign than in its second decimal. A later check put weighting beside it, with the same noise variable in each of 200 runs: 95% of the matching runs fall between +2.92 and +3.90 kg, and 95% of the weighting runs between +3.29 and +3.39. Greedy matching re-pairs people. Weighting does not.
 
 **12. Textbook limits assume a sample size (version 2).** A PSI limit of 0.10 alerts three times in four at 50 requests when nothing has changed. Limits measured at the window size do not.
 
 **13. The same seed is not the same model on another system (my run, November 2026).** The build's reference numbers came from Linux. My Windows run of the same code, packages and seeds gave a nested AUC of 0.888 against 0.886, and a threshold of 0.222 against 0.136. The cause was XGBoost's sampling, which I confirmed in tree 1: 219 of 262 rows kept on Windows, 218 on Linux. Lesson: say which system a number came from, and treat a second system as a second draw.
 
 **14. The threshold is the least stable number (my run, November 2026).** Two runs of one recipe put the 3 to 1 cut at 0.222 and 0.136. Resampling the 242 patients puts it anywhere from 0.12 to 0.59. Recall at the cut is steadier, 0.87 to 0.97. Lesson: quote what the cut delivers, with its interval, and not the cut itself.
+
+**15. One seed is one draw (my run, November 2026).** I had written that SMOTE earns 0.013 of AUC. On five seeds the gain runs from -0.004 to +0.013, and my rule would have chosen SMOTE on one seed of five. Lesson: before quoting a gain of one trained recipe over another, train both again on several seeds and quote the range. If the range crosses zero, there is no gain to quote.
 
 ---
 

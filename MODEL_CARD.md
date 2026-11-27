@@ -23,7 +23,8 @@ fingerprint (SHA-256) is checked by `pipeline/00_fetch_data.py` and stored in th
 Missing values are filled (median for measurements, most frequent code for coded inputs), SMOTE adds
 synthetic patients to the smaller class, and XGBoost is fitted. All three steps are one pipeline, so in
 cross-validation each is fitted on the training folds only. A random search tries 40 settings over 5
-folds. The settings that won are in `models/model_metadata.json`.
+folds. The settings that won are in `models/model_metadata.json`. On five seeds SMOTE showed no gain
+that holds over no resampling (-0.004 to +0.013 of nested AUC), so this card does not claim it helps.
 
 ## How well it does
 
@@ -36,7 +37,8 @@ folds. The settings that won are in `models/model_metadata.json`.
 | Test, at the served threshold | 27 of 28 caught, 13 false alarms among 33 without disease | the 61, scored once |
 | Brier score | 0.143 out-of-fold, 0.092 on the 61 | |
 
-The number to quote is 0.888. The test set gives 0.957, and its interval runs from 0.90 to 0.995: with 61
+The number to quote is 0.888, from the project's seed. Over five training seeds it runs from 0.874 to
+0.888. The test set gives 0.957, and its interval runs from 0.90 to 0.995: with 61
 patients it cannot say more than that. The 61 are an easier draw than the average fold.
 
 The served threshold is 0.222. It comes from counting one missed patient as 3 false alarms, which the
