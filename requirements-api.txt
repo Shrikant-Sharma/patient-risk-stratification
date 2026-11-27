@@ -1,0 +1,6 @@
+# What the API needs to run, and nothing else. Pinned to the versions it was built and tested with.
+fastapi==0.136.1
+uvicorn==0.54.0
+pydantic==2.13.3
+xgboost==3.2.0
+numpy==2.4.4

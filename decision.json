@@ -1,0 +1,5 @@
+{
+ "cost_of_a_miss_against_a_false_alarm": 3,
+ "note": "A decision, not a result. 3 means one missed patient with disease is counted as costing the same as 3 patients flagged without it. It sets the threshold. Change it, then run pipeline/02 and 03 again.",
+ "decided_by": "the owner, on 2026-11-26. The reason is in DECISIONS.md, decision 1"
+}

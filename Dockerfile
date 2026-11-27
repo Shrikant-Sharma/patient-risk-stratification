@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+COPY requirements-api.txt .
+RUN pip install --no-cache-dir --user -r requirements-api.txt
 
 # Stage 2: runtime — only copy what's needed to run
 FROM python:3.13-slim AS runtime
@@ -27,6 +27,7 @@ COPY --from=builder --chown=apiuser:apiuser /root/.local /home/apiuser/.local
 ENV PATH=/home/apiuser/.local/bin:$PATH
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV REQUEST_LOG=/tmp/requests.jsonl
 
 # Copy app source and models with proper ownership
 COPY --chown=apiuser:apiuser src/ ./src/

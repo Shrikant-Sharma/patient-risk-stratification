@@ -1,0 +1,148 @@
+==============================================================================
+run_all.py  started 2026-11-26T11:05:38-05:00  steps: 00, 01, 02, 03, 04, 05a, 05b, 06, tests
+machine: Windows-11-10.0.26320-SP0, AMD Ryzen 7 4800H with Radeon Graphics, 16 logical cores
+python 3.13.13 from .venv  |  branch version-2 at 07115ea
+packages: numpy 2.4.4, pandas 2.3.3, scipy 1.17.1, scikit-learn 1.8.0, imbalanced-learn 0.14.1, xgboost 3.2.0, shap 0.51.0, numba 0.68.1, causaldata 0.1.5, fastapi 0.136.1, uvicorn 0.54.0, pydantic 2.13.3, httpx 0.28.1, pytest 9.2.0
+==============================================================================
+
+[00] fetch the public data file and check its fingerprint
+   data\raw\heart_disease.csv: 303 patients, fingerprint as expected
+[00] done in 4.4 seconds
+
+[01] score the model three ways (the long step)
+   A. the notebooks' way
+      the notebooks' folds: cross-validated AUC 0.887, test AUC 0.950
+      shuffled folds: cross-validated AUC 0.918, test AUC 0.947
+   B. SMOTE inside the folds
+      repeat 1 of 3: AUC over all out-of-fold patients 0.870
+      repeat 2 of 3: AUC over all out-of-fold patients 0.891
+      repeat 3 of 3: AUC over all out-of-fold patients 0.889
+      nested AUC 0.888 (sd of folds 0.031), test AUC 0.957
+   C. no resampling
+      repeat 1 of 3: AUC over all out-of-fold patients 0.864
+      repeat 2 of 3: AUC over all out-of-fold patients 0.876
+      repeat 3 of 3: AUC over all out-of-fold patients 0.872
+      nested AUC 0.875 (sd of folds 0.026), test AUC 0.949
+   chosen: B_smote_inside_folds. 88 seconds. results/evaluation.json
+[01] done in 92.5 seconds
+
+[02] calibration and threshold on out-of-fold scores
+   recipe: B_smote_inside_folds. calibration chosen: raw
+     raw       Brier 0.1427  gap 0.049
+     platt     Brier 0.1417  gap 0.069  difference from raw, 95% interval -0.0045 to +0.0026
+     isotonic  Brier 0.1506  gap 0.049  difference from raw, 95% interval -0.0026 to +0.0183
+   cost ratio  threshold  flagged  caught  missed  false alarms  recall  precision
+       1 to 1    0.603       93      80      31        13       0.72     0.86
+       2 to 1    0.537      107      86      25        21       0.77     0.80
+       3 to 1    0.222      162     102       9        60       0.92     0.63
+       5 to 1    0.118      197     109       2        88       0.98     0.55
+      10 to 1    0.113      197     109       2        88       0.98     0.55
+   served threshold 0.222 at 3 to 1
+     242 out-of-fold: recall 0.92 (0.85 to 0.96), precision 0.63
+     61 test, once:   caught 27 of 28 (the true rate could be as low as 0.82), false alarms 13, precision 0.68
+[02] done in 3.6 seconds
+
+[03] train the served model and write its metadata
+   models/xgb_v2.json and models/model_metadata.json written. threshold 0.222, calibration raw
+   chance of a false drift alert in one window when nothing has changed: 30 requests 2.9%, 50 requests 2.9%, 100 requests 2.8%
+   by sex, out of fold: {'women': (15, 18, 21, 59, 0.843), 'men': (87, 93, 39, 72, 0.85)}
+   share of mean |SHAP|: {'thal': 0.227, 'ca': 0.207, 'cp': 0.18, 'exang': 0.075, 'sex': 0.067}
+   chance of a watch: 30 requests 9.6%, 50 requests 8.5%, 100 requests 9.4%
+   limits at 50 requests: {'age': 0.259, 'trestbps': 0.267, 'chol': 0.267, 'thalach': 0.271, 'oldpeak': 0.226, 'sex': 0.149, 'cp': 0.23, 'fbs': 0.128, 'restecg': 0.17, 'exang': 0.154, 'slope': 0.183, 'ca': 0.22, 'thal': 0.174, 'score': 0.25}
+[03] done in 25.5 seconds
+
+[04] causal checks on the headline estimator
+   headline estimator: +3.270 kg from 388 pairs of 403 quitters
+     balance: largest standardized gap 0.28 before matching, 0.08 after
+     placebo:        mean -0.005 kg, 95% of runs -0.98 to +0.96, runs as large as the headline: 0%
+     random cause:   mean +3.427 kg, 95% of runs +2.96 to +3.94
+     80% subset:     mean +3.351 kg, 95% of runs +2.56 to +4.16
+     caliper:        0.1 SD +3.35 kg (387 pairs), 0.2 SD +3.27 kg (388 pairs), 0.3 SD +3.33 kg (389 pairs)
+     interval, pairs only:       +2.11 to +4.43 kg
+     interval, whole procedure:  +2.24 to +4.53 kg (mean +3.38)
+[04] done in 43.5 seconds
+
+[05a] drift check: replay four patient streams
+   C:\Users\shrik\Documents\patient-risk-stratification\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+     from starlette.testclient import TestClient as TestClient  # noqa
+   as published     ok     inputs over their limit: none; score over: False; flagged 68%; 200 draws: 7 alert, 45 watch, 148 ok
+   older clinic     alert  inputs over their limit: age, ca; score over: False; flagged 80%; 200 draws: 200 alert, 0 watch, 0 ok
+   cuff reads high  alert  inputs over their limit: trestbps; score over: False; flagged 68%; 200 draws: 200 alert, 0 watch, 0 ok
+   no chest pain    alert  inputs over their limit: cp, exang, ca, thal; score over: True; flagged 92%; 200 draws: 200 alert, 0 watch, 0 ok
+[05a] done in 9.9 seconds
+
+[05b] drift check: compare four alert rules
+   training patients, nothing changed     76%     3%     4%     1%
+   as published                          100%    18%    27%     4%
+   older clinic                          100%   100%   100%   100%
+   cuff reads high                       100%   100%   100%   100%
+   no chest pain                         100%   100%   100%   100%
+[05b] done in 18.2 seconds
+
+[06] the API on this machine: start it, live check, one bad request, stop it
+   uvicorn src.app:app at http://127.0.0.1:8000
+   up after 8.3 seconds
+   up after 0 seconds: {'status': 'ok', 'model_loaded': True, 'explainer_loaded': True, 'model_version': 'xgb_v2'}
+   20 known patients: largest difference from the recorded score 0.000038, 0.01 seconds a request
+   drift check: not enough requests | requests in the window: 0 | inputs over their limit: []
+   all checks passed
+   one bad request (cholesterol 5.2, thal 5): HTTP 422
+      refused: chol: Input should be greater than or equal to 100
+      refused: thal: Value error, thal must be one of [3, 6, 7]. See GET /data-dictionary
+   /model: xgb_v2, built 2026-11-26, threshold 0.2215, a miss counted as 3 false alarms
+   [server] INFO:     Started server process [17236]
+   [server] INFO:     Waiting for application startup.
+   [server] INFO:     Application startup complete.
+   [server] INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+   [server] INFO:     127.0.0.1:1744 - "GET /health HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1748 - "GET /health HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1749 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1750 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1751 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1752 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1753 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1754 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1755 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1756 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1757 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1758 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1759 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1760 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1761 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1762 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1763 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1764 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1765 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1766 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1767 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1768 - "POST /predict HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1769 - "POST /explain HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1770 - "GET /data-dictionary HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1771 - "GET /monitoring/drift HTTP/1.1" 200 OK
+   [server] INFO:     127.0.0.1:1772 - "POST /predict HTTP/1.1" 422 Unprocessable Content
+   [server] INFO:     127.0.0.1:1773 - "GET /model HTTP/1.1" 200 OK
+[06] done in 9.1 seconds
+
+[tests] the offline checks, on the files this run wrote
+   .............................                                            [100%]
+   ============================== warnings summary ===============================
+   .venv\Lib\site-packages\fastapi\testclient.py:1
+     C:\Users\shrik\Documents\patient-risk-stratification\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+       from starlette.testclient import TestClient as TestClient  # noqa
+   
+   -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+   29 passed, 1 warning in 11.26s
+[tests] done in 13.7 seconds
+
+step    seconds  result
+00          4.4  ok
+01         92.5  ok
+02          3.6  ok
+03         25.5  ok
+04         43.5  ok
+05a         9.9  ok
+05b        18.2  ok
+06          9.1  ok
+tests      13.7  ok
+all 9 steps passed in 220 seconds
+log: results/run_log.txt

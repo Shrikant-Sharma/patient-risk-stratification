@@ -1,175 +1,166 @@
 """
 Patient Risk Stratification API.
-Serves a tuned XGBoost model with SHAP explainability.
+
+Serves the XGBoost model with a SHAP explanation for each prediction, a data dictionary, a
+request log and a drift check. Everything it needs is in the repository: the trees
+(models/xgb_v2.json) and one metadata file. It needs xgboost, numpy, FastAPI and pydantic.
+
+A portfolio project on a public research file of 303 patients. Not a medical device, and not
+for use on real patients.
 """
-from mangum import Mangum
 import json
-import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-import joblib
 import numpy as np
-import pandas as pd
 import xgboost as xgb
-from fastapi import FastAPI, HTTPException
+from typing import Optional
+
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.schemas import (
-    PatientFeatures,
-    PredictionResponse,
-    ExplainResponse,
-    FeatureContribution,
-    HealthResponse,
-)
+from src import data_dictionary, monitoring
+from src.schemas import (DataDictionaryResponse, ExplainResponse, FeatureContribution, HealthResponse,
+                         PatientFeatures, PredictionResponse)
 
-# Resolve paths relative to this file (works regardless of where uvicorn is launched from)
 BASE_DIR = Path(__file__).resolve().parent.parent
-MODEL_PATH = BASE_DIR / "models" / "xgb_tuned.json"
-EXPLAINER_PATH = BASE_DIR / "models" / "shap_explainer.pkl"
-CALIBRATION_METADATA_PATH = BASE_DIR / "models" / "calibration_metadata.json"
+METADATA_PATH = BASE_DIR / "models" / "model_metadata.json"
 
-# Loaded model state — populated at startup
-state = {"model": None, "explainer": None,
-         "calibration": None, "feature_names": None}
+state = {"booster": None, "meta": None}
+
+
+def load():
+    meta = json.loads(METADATA_PATH.read_text(encoding="utf-8"))
+    booster = xgb.Booster()
+    booster.load_model(str(BASE_DIR / "models" / meta["model_file"]))
+    state["booster"], state["meta"] = booster, meta
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load model and metadata at app startup; clean up at shutdown."""
-    print("Loading model artifacts...")
-
-    model = xgb.XGBClassifier()
-    model.load_model(str(MODEL_PATH))
-    state["model"] = model
-
-    state["explainer"] = joblib.load(EXPLAINER_PATH)
-
-    with open(CALIBRATION_METADATA_PATH) as f:
-        state["calibration"] = json.load(f)
-
-    state["feature_names"] = [
-        "age", "trestbps", "chol", "thalach", "oldpeak",
-        "sex", "cp", "fbs", "restecg", "exang", "slope", "ca", "thal"
-    ]
-
-    print("Model loaded. API ready.")
+    load()
     yield
-    print("Shutting down.")
 
 
 app = FastAPI(
     title="Patient Risk Stratification API",
-    description="Predicts heart disease risk from clinical features. Tuned XGBoost with SHAP explainability.",
-    version="1.0.0",
+    description="Heart disease risk from 13 clinical inputs: XGBoost with a SHAP explanation, a data dictionary and a drift check. "
+                "A portfolio project on a public research file. Not for use on real patients.",
+    version="2.0.0",
     lifespan=lifespan,
 )
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
-def _features_to_dataframe(features: PatientFeatures) -> pd.DataFrame:
-    """Convert Pydantic model into a single-row DataFrame in the correct column order."""
-    row = {name: getattr(features, name) for name in state["feature_names"]}
-    return pd.DataFrame([row])
+def _ready():
+    if state["booster"] is None:          # Lambda can call the handler without the startup event
+        try:
+            load()
+        except Exception as error:
+            raise HTTPException(status_code=503, detail=f"Model not loaded: {error}")
+    return state["booster"], state["meta"]
 
 
-def _risk_tier(probability: float) -> str:
-    """Map probability to a clinical risk tier."""
-    if probability < 0.30:
+def _matrix(features, meta):
+    """One row, in the order the model was trained in."""
+    row = [float(getattr(features, name)) for name in meta["features"]]
+    return xgb.DMatrix(np.array([row], dtype=np.float32), feature_names=meta["features"])
+
+
+def calibrate(p, cal):
+    """The calibration stored in the metadata, as arithmetic."""
+    if cal["method"] == "platt":
+        p = min(max(p, 1e-6), 1 - 1e-6)
+        return float(1 / (1 + np.exp(-(cal["a"] * np.log(p / (1 - p)) + cal["b"]))))
+    if cal["method"] == "isotonic":
+        return float(np.interp(p, cal["x"], cal["y"]))
+    return float(p)
+
+
+def _tier(probability, meta):
+    if probability < meta["threshold"]:
         return "LOW"
-    if probability < 0.70:
-        return "MODERATE"
-    return "HIGH"
+    return "MODERATE" if probability < meta["tiers"]["upper_cut"] else "HIGH"
+
+
+def _score(features, endpoint, check=None):
+    booster, meta = _ready()
+    raw = float(booster.predict(_matrix(features, meta))[0])
+    probability = calibrate(raw, meta["calibration"])
+    flagged = int(probability >= meta["threshold"])
+    if check is None:                     # the weekly check marks its own requests, so they stay out of the drift window
+        monitoring.log_request({n: float(getattr(features, n)) for n in meta["features"]}, raw, probability, flagged, meta["model_version"], endpoint)
+    return probability, flagged
 
 
 @app.get("/health", response_model=HealthResponse, tags=["meta"])
 async def health():
-    """Verify service is running and model is loaded."""
-    return HealthResponse(
-        status="ok",
-        model_loaded=state["model"] is not None,
-        explainer_loaded=state["explainer"] is not None,
-    )
+    """The service is up and the model is loaded."""
+    booster, meta = _ready()
+    return HealthResponse(status="ok", model_loaded=True, explainer_loaded=True, model_version=meta["model_version"])
 
 
 @app.post("/predict", response_model=PredictionResponse, tags=["inference"])
-async def predict(features: PatientFeatures):
-    """Predict disease probability for a single patient."""
-    if state["model"] is None:
-        raise HTTPException(status_code=503, detail="Model not loaded")
-
-    X = _features_to_dataframe(features)
-    proba = float(state["model"].predict_proba(X)[0, 1])
-
-    threshold = state["calibration"]["recommended_threshold_clinical"]
-    prediction = int(proba >= threshold)
-
-    return PredictionResponse(
-        disease_probability=round(proba, 4),
-        prediction=prediction,
-        risk_tier=_risk_tier(proba),
-        threshold_used=round(threshold, 4),
-        model_version="xgb_tuned_v1",
-    )
+async def predict(features: PatientFeatures, x_check: Optional[str] = Header(default=None)):
+    """The probability of disease for one patient, and whether it crosses the threshold."""
+    probability, flagged = _score(features, "predict", x_check)
+    meta = state["meta"]
+    return PredictionResponse(disease_probability=round(probability, 4), prediction=flagged, risk_tier=_tier(probability, meta),
+                              threshold_used=round(meta["threshold"], 4), model_version=meta["model_version"])
 
 
 @app.post("/explain", response_model=ExplainResponse, tags=["inference"])
-async def explain(features: PatientFeatures):
-    """Predict + return per-feature SHAP contributions for the prediction."""
-    if state["explainer"] is None:
-        raise HTTPException(status_code=503, detail="Explainer not loaded")
+async def explain(features: PatientFeatures, x_check: Optional[str] = Header(default=None)):
+    """The prediction with each input's SHAP contribution. XGBoost computes the exact tree SHAP values itself."""
+    probability, _ = _score(features, "explain", x_check)
+    booster, meta = state["booster"], state["meta"]
+    contribs = booster.predict(_matrix(features, meta), pred_contribs=True)[0]      # 13 inputs, then the base value
+    items = [FeatureContribution(feature=name, value=float(getattr(features, name)), shap_value=round(float(v), 4),
+                                 pushes_toward="disease" if v > 0 else "healthy")
+             for name, v in zip(meta["features"], contribs[:-1])]
+    items.sort(key=lambda c: abs(c.shap_value), reverse=True)
+    summary = f"Predicted probability of disease: {probability:.2%}. Top contributing features: " + ", ".join(
+        f"{c.feature}={c.value:g} (pushes {c.pushes_toward})" for c in items[:3])
+    return ExplainResponse(disease_probability=round(probability, 4), base_value_log_odds=round(float(contribs[-1]), 4),
+                           contributions=items, summary=summary)
 
-    X = _features_to_dataframe(features)
-    proba = float(state["model"].predict_proba(X)[0, 1])
 
-    shap_explanation = state["explainer"](X)
-    shap_values = shap_explanation.values[0]
-    base_value = float(shap_explanation.base_values[0]) if hasattr(
-        shap_explanation.base_values, '__len__') else float(shap_explanation.base_values)
+@app.get("/data-dictionary", response_model=DataDictionaryResponse, tags=["meta"])
+async def dictionary():
+    """What each input means, its unit, the values it may take, and the range seen in training."""
+    _, meta = _ready()
+    fields = {}
+    for name in meta["features"]:
+        fields[name] = dict(data_dictionary.FIELDS[name])
+        if name in meta["training_range"]:
+            fields[name]["seen_in_training"] = meta["training_range"][name]
+    return DataDictionaryResponse(source=data_dictionary.SOURCE, target=data_dictionary.TARGET, fields=fields)
 
-    contributions = []
-    for name, val in zip(state["feature_names"], shap_values):
-        contributions.append(FeatureContribution(
-            feature=name,
-            value=float(getattr(features, name)),
-            shap_value=round(float(val), 4),
-            pushes_toward="disease" if val > 0 else "healthy",
-        ))
 
-    contributions.sort(key=lambda c: abs(c.shap_value), reverse=True)
-    top3 = contributions[:3]
-    summary = f"Predicted probability of disease: {proba:.2%}. Top contributing features: " + ", ".join(
-        f"{c.feature}={c.value:g} (pushes {c.pushes_toward})" for c in top3
-    )
+@app.get("/model", tags=["meta"])
+async def model_facts():
+    """The served model's facts: recipe, threshold, tiers, measured scores, versions."""
+    _, meta = _ready()
+    return {k: v for k, v in meta.items() if k != "drift_reference"}
 
-    return ExplainResponse(
-        disease_probability=round(proba, 4),
-        base_value_log_odds=round(base_value, 4),
-        contributions=contributions,
-        summary=summary,
-    )
+
+@app.get("/monitoring/drift", tags=["monitoring"])
+async def drift():
+    """Compare the latest requests in this instance's log with the training patients."""
+    _, meta = _ready()
+    return monitoring.drift_report(monitoring.read_log(), meta["drift_reference"])
 
 
 @app.get("/", tags=["meta"])
 async def root():
-    """API landing page — points users to /docs."""
-    return {
-        "service": "Patient Risk Stratification API",
-        "docs": "/docs",
-        "health": "/health",
-    }
+    return {"service": "Patient Risk Stratification API", "docs": "/docs", "health": "/health",
+            "data_dictionary": "/data-dictionary", "model": "/model", "drift": "/monitoring/drift",
+            "note": "A portfolio project on a public research file. Not for use on real patients."}
 
 
-# ---------------------------------------------------------------------------
-# AWS Lambda handler — translates Lambda events to ASGI for FastAPI.
-# Used only when this app is deployed as a Lambda container image.
-# Local uvicorn execution ignores this; it just imports cleanly.
-# ---------------------------------------------------------------------------
-
-handler = Mangum(app)
+# AWS Lambda: Mangum turns a Lambda event into a request for this app. It is only installed in the Lambda image.
+try:
+    from mangum import Mangum
+    handler = Mangum(app)
+except ImportError:
+    handler = None

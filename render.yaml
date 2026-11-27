@@ -1,0 +1,19 @@
+# Render blueprint: one free web service that runs the API.
+# In Render: New > Blueprint, pick this repository. Free plan: 512 MB of memory, sleeps after
+# 15 minutes without traffic and takes about a minute to wake, and its disk is cleared on every
+# restart, so the request log there is short-lived by design.
+services:
+  - type: web
+    name: patient-risk-api
+    runtime: python
+    plan: free
+    region: ohio
+    buildCommand: pip install -r requirements-api.txt
+    startCommand: uvicorn src.app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: REQUEST_LOG
+        value: /tmp/requests.jsonl

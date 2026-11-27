@@ -1,0 +1,11 @@
+# Everything the pipeline scripts and the tests need, the API's own packages included.
+# Pinned to the versions the results in this repository were produced with (Python 3.13).
+-r requirements-api.txt
+pandas==2.3.3
+scipy==1.17.1
+scikit-learn==1.8.0
+imbalanced-learn==0.14.1
+causaldata==0.1.5
+shap==0.51.0
+httpx==0.28.1
+pytest==9.2.0

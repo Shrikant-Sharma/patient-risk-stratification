@@ -1,0 +1,61 @@
+{
+ "draws": 2000,
+ "seed": 42,
+ "patients": 242,
+ "served_threshold": 0.2215,
+ "cost_ratio_used": 3,
+ "cut_by_ratio": {
+  "1": {
+   "cut_on_all_patients": 0.6033,
+   "low": 0.5,
+   "median": 0.6033,
+   "high": 0.74,
+   "share_within_0.02": 0.291
+  },
+  "2": {
+   "cut_on_all_patients": 0.5375,
+   "low": 0.2052,
+   "median": 0.5375,
+   "high": 0.688,
+   "share_within_0.02": 0.275
+  },
+  "3": {
+   "cut_on_all_patients": 0.2215,
+   "low": 0.1178,
+   "median": 0.2215,
+   "high": 0.5884,
+   "share_within_0.02": 0.4
+  },
+  "5": {
+   "cut_on_all_patients": 0.1178,
+   "low": 0.1178,
+   "median": 0.1265,
+   "high": 0.3392,
+   "share_within_0.02": 0.57
+  },
+  "10": {
+   "cut_on_all_patients": 0.1134,
+   "low": 0.0329,
+   "median": 0.1178,
+   "high": 0.2025,
+   "share_within_0.02": 0.764
+  }
+ },
+ "at_served_threshold": {
+  "recall": {
+   "low": 0.8673,
+   "median": 0.9211,
+   "high": 0.9669
+  },
+  "precision": {
+   "low": 0.5528,
+   "median": 0.6312,
+   "high": 0.7055
+  },
+  "share_flagged": {
+   "low": 0.6074,
+   "median": 0.6694,
+   "high": 0.7273
+  }
+ }
+}

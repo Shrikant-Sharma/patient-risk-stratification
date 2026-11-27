@@ -1,0 +1,26 @@
+name: weekly check
+
+# Every Monday, and on demand: call the live API from outside.
+# It fails, and GitHub emails the repository owner, when the service does not answer, when a
+# known patient no longer gets the recorded score, or when the drift check reports an alert.
+# Set the address once: Settings > Secrets and variables > Actions > Variables > API_URL.
+# GitHub pauses scheduled jobs in a repository with no activity for 60 days.
+on:
+  schedule:
+    - cron: "17 13 * * 1"
+  workflow_dispatch:
+
+jobs:
+  live-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Check the live API
+        env:
+          API_URL: ${{ vars.API_URL }}
+        run: |
+          if [ -z "$API_URL" ]; then echo "The repository variable API_URL is not set."; exit 1; fi
+          python pipeline/06_live_check.py "$API_URL"

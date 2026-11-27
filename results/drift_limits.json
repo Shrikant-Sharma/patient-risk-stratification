@@ -1,0 +1,42 @@
+{
+ "window": 50,
+ "draws": 500,
+ "rules": [
+  "fixed 0.10, any input or the score",
+  "fixed 0.25, any input or the score",
+  "measured limit, any input or the score",
+  "as built: score, or two inputs, or one input over its strict limit"
+ ],
+ "share_of_draws_with_an_alert": {
+  "training patients, nothing changed": {
+   "fixed 0.10, any input or the score": 0.756,
+   "fixed 0.25, any input or the score": 0.026,
+   "measured limit, any input or the score": 0.038,
+   "as built: score, or two inputs, or one input over its strict limit": 0.006
+  },
+  "as published": {
+   "fixed 0.10, any input or the score": 1.0,
+   "fixed 0.25, any input or the score": 0.18,
+   "measured limit, any input or the score": 0.268,
+   "as built: score, or two inputs, or one input over its strict limit": 0.042
+  },
+  "older clinic": {
+   "fixed 0.10, any input or the score": 1.0,
+   "fixed 0.25, any input or the score": 1.0,
+   "measured limit, any input or the score": 1.0,
+   "as built: score, or two inputs, or one input over its strict limit": 1.0
+  },
+  "cuff reads high": {
+   "fixed 0.10, any input or the score": 1.0,
+   "fixed 0.25, any input or the score": 1.0,
+   "measured limit, any input or the score": 1.0,
+   "as built: score, or two inputs, or one input over its strict limit": 1.0
+  },
+  "no chest pain": {
+   "fixed 0.10, any input or the score": 1.0,
+   "fixed 0.25, any input or the score": 1.0,
+   "measured limit, any input or the score": 1.0,
+   "as built: score, or two inputs, or one input over its strict limit": 1.0
+  }
+ }
+}

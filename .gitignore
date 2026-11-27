@@ -52,3 +52,5 @@ warmer-targets.json
 payload.json
 response.txt
 lambda-response.json
+# Request log written by the API
+logs/

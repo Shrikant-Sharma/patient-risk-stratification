@@ -1,0 +1,217 @@
+{
+ "window": 50,
+ "draws": 200,
+ "streams": {
+  "as published": {
+   "what": "the 61 held-back patients",
+   "patients_available": 61,
+   "sent": 61,
+   "status": "ok",
+   "inputs_over_limit": [],
+   "inputs_over_strict_limit": [],
+   "score_over_limit": false,
+   "flag_rate": 0.68,
+   "psi": {
+    "age": 0.2357,
+    "trestbps": 0.1446,
+    "chol": 0.1418,
+    "thalach": 0.065,
+    "oldpeak": 0.2002,
+    "sex": 0.013,
+    "cp": 0.088,
+    "fbs": 0.0236,
+    "restecg": 0.1697,
+    "exang": 0.0131,
+    "slope": 0.0962,
+    "ca": 0.1901,
+    "thal": 0.0974,
+    "score": 0.0456
+   },
+   "limit": {
+    "age": 0.2594,
+    "trestbps": 0.2669,
+    "chol": 0.2672,
+    "thalach": 0.2708,
+    "oldpeak": 0.2262,
+    "sex": 0.1485,
+    "cp": 0.2301,
+    "fbs": 0.1278,
+    "restecg": 0.17,
+    "exang": 0.1537,
+    "slope": 0.1827,
+    "ca": 0.2197,
+    "thal": 0.1738,
+    "score": 0.2496
+   },
+   "caught": 27,
+   "with_disease": 28,
+   "false_alarms": 13,
+   "of_200_draws": {
+    "alert": 7,
+    "watch": 45,
+    "ok": 148
+   }
+  },
+  "older clinic": {
+   "what": "patients aged 60 and over, from the whole file",
+   "patients_available": 91,
+   "sent": 61,
+   "status": "alert",
+   "inputs_over_limit": [
+    "age",
+    "ca"
+   ],
+   "inputs_over_strict_limit": [
+    "age"
+   ],
+   "score_over_limit": false,
+   "flag_rate": 0.8,
+   "psi": {
+    "age": 1.9624,
+    "trestbps": 0.1576,
+    "chol": 0.0482,
+    "thalach": 0.2515,
+    "oldpeak": 0.1997,
+    "sex": 0.1485,
+    "cp": 0.0871,
+    "fbs": 0.012,
+    "restecg": 0.062,
+    "exang": 0.0499,
+    "slope": 0.0394,
+    "ca": 0.3306,
+    "thal": 0.0417,
+    "score": 0.1236
+   },
+   "limit": {
+    "age": 0.2594,
+    "trestbps": 0.2669,
+    "chol": 0.2672,
+    "thalach": 0.2708,
+    "oldpeak": 0.2262,
+    "sex": 0.1485,
+    "cp": 0.2301,
+    "fbs": 0.1278,
+    "restecg": 0.17,
+    "exang": 0.1537,
+    "slope": 0.1827,
+    "ca": 0.2197,
+    "thal": 0.1738,
+    "score": 0.2496
+   },
+   "of_200_draws": {
+    "alert": 200,
+    "watch": 0,
+    "ok": 0
+   }
+  },
+  "cuff reads high": {
+   "what": "the 61 held-back patients, blood pressure 15 mm Hg too high",
+   "patients_available": 61,
+   "sent": 61,
+   "status": "alert",
+   "inputs_over_limit": [
+    "trestbps"
+   ],
+   "inputs_over_strict_limit": [
+    "trestbps"
+   ],
+   "score_over_limit": false,
+   "flag_rate": 0.68,
+   "psi": {
+    "age": 0.2357,
+    "trestbps": 1.4205,
+    "chol": 0.1418,
+    "thalach": 0.065,
+    "oldpeak": 0.2002,
+    "sex": 0.013,
+    "cp": 0.088,
+    "fbs": 0.0236,
+    "restecg": 0.1697,
+    "exang": 0.0131,
+    "slope": 0.0962,
+    "ca": 0.1901,
+    "thal": 0.0974,
+    "score": 0.0364
+   },
+   "limit": {
+    "age": 0.2594,
+    "trestbps": 0.2669,
+    "chol": 0.2672,
+    "thalach": 0.2708,
+    "oldpeak": 0.2262,
+    "sex": 0.1485,
+    "cp": 0.2301,
+    "fbs": 0.1278,
+    "restecg": 0.17,
+    "exang": 0.1537,
+    "slope": 0.1827,
+    "ca": 0.2197,
+    "thal": 0.1738,
+    "score": 0.2496
+   },
+   "caught": 27,
+   "with_disease": 28,
+   "false_alarms": 14,
+   "of_200_draws": {
+    "alert": 200,
+    "watch": 0,
+    "ok": 0
+   }
+  },
+  "no chest pain": {
+   "what": "patients with chest pain type 4, from the whole file",
+   "patients_available": 144,
+   "sent": 61,
+   "status": "alert",
+   "inputs_over_limit": [
+    "cp",
+    "exang",
+    "ca",
+    "thal"
+   ],
+   "inputs_over_strict_limit": [
+    "cp",
+    "exang"
+   ],
+   "score_over_limit": true,
+   "flag_rate": 0.92,
+   "psi": {
+    "age": 0.0962,
+    "trestbps": 0.0774,
+    "chol": 0.0048,
+    "thalach": 0.2572,
+    "oldpeak": 0.2039,
+    "sex": 0.1408,
+    "cp": 1.8165,
+    "fbs": 0.0447,
+    "restecg": 0.0731,
+    "exang": 0.3587,
+    "slope": 0.1517,
+    "ca": 0.2236,
+    "thal": 0.2251,
+    "score": 0.879
+   },
+   "limit": {
+    "age": 0.2594,
+    "trestbps": 0.2669,
+    "chol": 0.2672,
+    "thalach": 0.2708,
+    "oldpeak": 0.2262,
+    "sex": 0.1485,
+    "cp": 0.2301,
+    "fbs": 0.1278,
+    "restecg": 0.17,
+    "exang": 0.1537,
+    "slope": 0.1827,
+    "ca": 0.2197,
+    "thal": 0.1738,
+    "score": 0.2496
+   },
+   "of_200_draws": {
+    "alert": 200,
+    "watch": 0,
+    "ok": 0
+   }
+  }
+ }
+}

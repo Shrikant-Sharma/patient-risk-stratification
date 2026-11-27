@@ -6,8 +6,11 @@ FROM public.ecr.aws/lambda/python:3.13
 
 # Install Python dependencies into the Lambda task root.
 # ${LAMBDA_TASK_ROOT} is /var/task — Lambda's working directory.
-COPY requirements-lambda.txt ${LAMBDA_TASK_ROOT}/
+COPY requirements-api.txt requirements-lambda.txt ${LAMBDA_TASK_ROOT}/
 RUN pip install --no-cache-dir -r ${LAMBDA_TASK_ROOT}/requirements-lambda.txt
+
+# Lambda's file system is read-only except /tmp, so the request log goes there.
+ENV REQUEST_LOG=/tmp/requests.jsonl
 
 # Copy application source and trained model artifacts.
 COPY src/    ${LAMBDA_TASK_ROOT}/src/

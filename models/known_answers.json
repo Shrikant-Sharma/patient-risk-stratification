@@ -1,0 +1,362 @@
+[
+ {
+  "features": {
+   "age": 59.0,
+   "trestbps": 138.0,
+   "chol": 271.0,
+   "thalach": 182.0,
+   "oldpeak": 0.0,
+   "sex": 1.0,
+   "cp": 4.0,
+   "fbs": 0.0,
+   "restecg": 2.0,
+   "exang": 0.0,
+   "slope": 1.0,
+   "ca": 0.0,
+   "thal": 3.0
+  },
+  "raw_score": 0.22118622064590454
+ },
+ {
+  "features": {
+   "age": 66.0,
+   "trestbps": 160.0,
+   "chol": 228.0,
+   "thalach": 138.0,
+   "oldpeak": 2.3,
+   "sex": 1.0,
+   "cp": 4.0,
+   "fbs": 0.0,
+   "restecg": 2.0,
+   "exang": 0.0,
+   "slope": 1.0,
+   "ca": 0.0,
+   "thal": 6.0
+  },
+  "raw_score": 0.5992665886878967
+ },
+ {
+  "features": {
+   "age": 51.0,
+   "trestbps": 130.0,
+   "chol": 256.0,
+   "thalach": 149.0,
+   "oldpeak": 0.5,
+   "sex": 0.0,
+   "cp": 3.0,
+   "fbs": 0.0,
+   "restecg": 2.0,
+   "exang": 0.0,
+   "slope": 1.0,
+   "ca": 0.0,
+   "thal": 3.0
+  },
+  "raw_score": 0.07001028209924698
+ },
+ {
+  "features": {
+   "age": 34.0,
+   "trestbps": 118.0,
+   "chol": 182.0,
+   "thalach": 174.0,
+   "oldpeak": 0.0,
+   "sex": 1.0,
+   "cp": 1.0,
+   "fbs": 0.0,
+   "restecg": 2.0,
+   "exang": 0.0,
+   "slope": 1.0,
+   "ca": 0.0,
+   "thal": 3.0
+  },
+  "raw_score": 0.07846633344888687
+ },
+ {
+  "features": {
+   "age": 54.0,
+   "trestbps": 150.0,
+   "chol": 232.0,
+   "thalach": 165.0,
+   "oldpeak": 1.6,
+   "sex": 1.0,
+   "cp": 3.0,
+   "fbs": 0.0,
+   "restecg": 2.0,
+   "exang": 0.0,
+   "slope": 1.0,
+   "ca": 0.0,
+   "thal": 7.0
+  },
+  "raw_score": 0.29203030467033386
+ },
+ {
+  "features": {
+   "age": 60.0,
+   "trestbps": 120.0,
+   "chol": 178.0,
+   "thalach": 96.0,
+   "oldpeak": 0.0,
+   "sex": 0.0,
+   "cp": 3.0,
+   "fbs": 1.0,
+   "restecg": 0.0,
+   "exang": 0.0,
+   "slope": 1.0,
+   "ca": 0.0,
+   "thal": 3.0
+  },
+  "raw_score": 0.07867543399333954
+ },
+ {
+  "features": {
+   "age": 63.0,
+   "trestbps": 140.0,
+   "chol": 195.0,
+   "thalach": 179.0,
+   "oldpeak": 0.0,
+   "sex": 0.0,
+   "cp": 2.0,
+   "fbs": 0.0,
+   "restecg": 0.0,
+   "exang": 0.0,
+   "slope": 1.0,
+   "ca": 2.0,
+   "thal": 3.0
+  },
+  "raw_score": 0.17986369132995605
+ },
+ {
+  "features": {
+   "age": 74.0,
+   "trestbps": 120.0,
+   "chol": 269.0,
+   "thalach": 121.0,
+   "oldpeak": 0.2,
+   "sex": 0.0,
+   "cp": 2.0,
+   "fbs": 0.0,
+   "restecg": 2.0,
+   "exang": 1.0,
+   "slope": 1.0,
+   "ca": 1.0,
+   "thal": 3.0
+  },
+  "raw_score": 0.4143851399421692
+ },
+ {
+  "features": {
+   "age": 35.0,
+   "trestbps": 126.0,
+   "chol": 282.0,
+   "thalach": 156.0,
+   "oldpeak": 0.0,
+   "sex": 1.0,
+   "cp": 4.0,
+   "fbs": 0.0,
+   "restecg": 2.0,
+   "exang": 1.0,
+   "slope": 1.0,
+   "ca": 0.0,
+   "thal": 7.0
+  },
+  "raw_score": 0.709223747253418
+ },
+ {
+  "features": {
+   "age": 45.0,
+   "trestbps": 138.0,
+   "chol": 236.0,
+   "thalach": 152.0,
+   "oldpeak": 0.2,
+   "sex": 0.0,
+   "cp": 4.0,
+   "fbs": 0.0,
+   "restecg": 2.0,
+   "exang": 1.0,
+   "slope": 2.0,
+   "ca": 0.0,
+   "thal": 3.0
+  },
+  "raw_score": 0.2800650894641876
+ },
+ {
+  "features": {
+   "age": 62.0,
+   "trestbps": 120.0,
+   "chol": 281.0,
+   "thalach": 103.0,
+   "oldpeak": 1.4,
+   "sex": 1.0,
+   "cp": 2.0,
+   "fbs": 0.0,
+   "restecg": 2.0,
+   "exang": 0.0,
+   "slope": 2.0,
+   "ca": 1.0,
+   "thal": 7.0
+  },
+  "raw_score": 0.8291677236557007
+ },
+ {
+  "features": {
+   "age": 58.0,
+   "trestbps": 150.0,
+   "chol": 283.0,
+   "thalach": 162.0,
+   "oldpeak": 1.0,
+   "sex": 0.0,
+   "cp": 1.0,
+   "fbs": 1.0,
+   "restecg": 2.0,
+   "exang": 0.0,
+   "slope": 1.0,
+   "ca": 0.0,
+   "thal": 3.0
+  },
+  "raw_score": 0.11186385899782181
+ },
+ {
+  "features": {
+   "age": 66.0,
+   "trestbps": 160.0,
+   "chol": 246.0,
+   "thalach": 120.0,
+   "oldpeak": 0.0,
+   "sex": 1.0,
+   "cp": 2.0,
+   "fbs": 0.0,
+   "restecg": 0.0,
+   "exang": 1.0,
+   "slope": 2.0,
+   "ca": 3.0,
+   "thal": 6.0
+  },
+  "raw_score": 0.8271620869636536
+ },
+ {
+  "features": {
+   "age": 54.0,
+   "trestbps": 120.0,
+   "chol": 188.0,
+   "thalach": 113.0,
+   "oldpeak": 1.4,
+   "sex": 1.0,
+   "cp": 4.0,
+   "fbs": 0.0,
+   "restecg": 0.0,
+   "exang": 0.0,
+   "slope": 2.0,
+   "ca": 1.0,
+   "thal": 7.0
+  },
+  "raw_score": 0.9176302552223206
+ },
+ {
+  "features": {
+   "age": 59.0,
+   "trestbps": 164.0,
+   "chol": 176.0,
+   "thalach": 90.0,
+   "oldpeak": 1.0,
+   "sex": 1.0,
+   "cp": 4.0,
+   "fbs": 1.0,
+   "restecg": 2.0,
+   "exang": 0.0,
+   "slope": 2.0,
+   "ca": 2.0,
+   "thal": 6.0
+  },
+  "raw_score": 0.9371697306632996
+ },
+ {
+  "features": {
+   "age": 58.0,
+   "trestbps": 132.0,
+   "chol": 224.0,
+   "thalach": 173.0,
+   "oldpeak": 3.2,
+   "sex": 1.0,
+   "cp": 3.0,
+   "fbs": 0.0,
+   "restecg": 2.0,
+   "exang": 0.0,
+   "slope": 1.0,
+   "ca": 2.0,
+   "thal": 7.0
+  },
+  "raw_score": 0.652202844619751
+ },
+ {
+  "features": {
+   "age": 69.0,
+   "trestbps": 160.0,
+   "chol": 234.0,
+   "thalach": 131.0,
+   "oldpeak": 0.1,
+   "sex": 1.0,
+   "cp": 1.0,
+   "fbs": 1.0,
+   "restecg": 2.0,
+   "exang": 0.0,
+   "slope": 2.0,
+   "ca": 1.0,
+   "thal": 3.0
+  },
+  "raw_score": 0.5396817922592163
+ },
+ {
+  "features": {
+   "age": 62.0,
+   "trestbps": 140.0,
+   "chol": 268.0,
+   "thalach": 160.0,
+   "oldpeak": 3.6,
+   "sex": 0.0,
+   "cp": 4.0,
+   "fbs": 0.0,
+   "restecg": 2.0,
+   "exang": 0.0,
+   "slope": 3.0,
+   "ca": 2.0,
+   "thal": 3.0
+  },
+  "raw_score": 0.6284121870994568
+ },
+ {
+  "features": {
+   "age": 57.0,
+   "trestbps": 130.0,
+   "chol": 131.0,
+   "thalach": 115.0,
+   "oldpeak": 1.2,
+   "sex": 1.0,
+   "cp": 4.0,
+   "fbs": 0.0,
+   "restecg": 0.0,
+   "exang": 1.0,
+   "slope": 2.0,
+   "ca": 1.0,
+   "thal": 7.0
+  },
+  "raw_score": 0.9359142780303955
+ },
+ {
+  "features": {
+   "age": 59.0,
+   "trestbps": 135.0,
+   "chol": 234.0,
+   "thalach": 161.0,
+   "oldpeak": 0.5,
+   "sex": 1.0,
+   "cp": 4.0,
+   "fbs": 0.0,
+   "restecg": 0.0,
+   "exang": 0.0,
+   "slope": 2.0,
+   "ca": 0.0,
+   "thal": 7.0
+  },
+  "raw_score": 0.6385198831558228
+ }
+]

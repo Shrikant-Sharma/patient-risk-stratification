@@ -1,0 +1,112 @@
+{
+ "quick": false,
+ "draws": 40,
+ "folds": 5,
+ "repeats": 3,
+ "patients": 303,
+ "with_disease": 139,
+ "train": 242,
+ "train_with_disease": 111,
+ "test": 61,
+ "test_with_disease": 28,
+ "rows_with_a_missing_value": 6,
+ "A_notebooks_way": {
+  "rows_before_smote": 242,
+  "rows_after_smote": 262,
+  "cv_auc": 0.8868069252684638,
+  "test_auc": 0.9502164502164503,
+  "test_auc_interval": [
+   0.8896013126658289,
+   0.9913793103448276
+  ],
+  "best_params": {
+   "colsample_bytree": 0.7115485410368727,
+   "gamma": 3.5017891498638565,
+   "learning_rate": 0.26399834267149175,
+   "max_depth": 6,
+   "n_estimators": 251,
+   "reg_alpha": 0.4045081271221901,
+   "reg_lambda": 0.8877700987609598,
+   "subsample": 0.9403713795070051
+  }
+ },
+ "A_notebooks_way_shuffled_folds": {
+  "rows_before_smote": 242,
+  "rows_after_smote": 262,
+  "cv_auc": 0.9177405215866756,
+  "test_auc": 0.946969696969697,
+  "test_auc_interval": [
+   0.8803879310344828,
+   0.9922243589743591
+  ],
+  "best_params": {
+   "colsample_bytree": 0.8460028906796679,
+   "gamma": 4.950269250521316,
+   "learning_rate": 0.05202520457095721,
+   "max_depth": 5,
+   "n_estimators": 485,
+   "reg_alpha": 0.3225507642386005,
+   "reg_lambda": 0.8486697949246744,
+   "subsample": 0.6546485325768115
+  }
+ },
+ "B_smote_inside_folds": {
+  "cv_auc_of_best_draw": 0.8985425604990823,
+  "test_auc": 0.9567099567099566,
+  "test_auc_interval": [
+   0.8993400013964529,
+   0.9954954954954954
+  ],
+  "best_params": {
+   "colsample_bytree": 0.6125253169822235,
+   "gamma": 4.211423872974993,
+   "learning_rate": 0.1449262400109297,
+   "max_depth": 4,
+   "n_estimators": 369,
+   "reg_alpha": 0.7272719958564209,
+   "reg_lambda": 0.3265407688058354,
+   "subsample": 0.8281775897621597
+  },
+  "nested_auc_mean_of_folds": 0.887543025948823,
+  "nested_auc_sd_of_folds": 0.031333124591660926,
+  "nested_auc_lowest_fold": 0.8094405594405595,
+  "nested_auc_highest_fold": 0.9283216783216783,
+  "nested_auc_pooled_by_repeat": [
+   0.8700226944501753,
+   0.8914104944639296,
+   0.889278591568668
+  ],
+  "outer_folds_scored": 15
+ },
+ "C_no_resampling": {
+  "cv_auc_of_best_draw": 0.8986700899744378,
+  "test_auc": 0.949134199134199,
+  "test_auc_interval": [
+   0.8881720430107527,
+   0.9903022455506117
+  ],
+  "best_params": {
+   "colsample_bytree": 0.6421977039321082,
+   "gamma": 2.282672852414551,
+   "learning_rate": 0.07553213116505007,
+   "max_depth": 6,
+   "n_estimators": 385,
+   "reg_alpha": 0.8832802589188683,
+   "reg_lambda": 0.32434502100527396,
+   "subsample": 0.6488351818802693
+  },
+  "nested_auc_mean_of_folds": 0.8750157652331564,
+  "nested_auc_sd_of_folds": 0.026280874830476128,
+  "nested_auc_lowest_fold": 0.8216783216783217,
+  "nested_auc_highest_fold": 0.9158249158249159,
+  "nested_auc_pooled_by_repeat": [
+   0.8639020700089403,
+   0.8755243793411732,
+   0.8721202118148684
+  ],
+  "outer_folds_scored": 15
+ },
+ "standard_error_used": 0.008090177981876322,
+ "chosen": "B_smote_inside_folds",
+ "seconds": 88
+}

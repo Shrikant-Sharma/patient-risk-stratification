@@ -1,0 +1,61 @@
+{
+ "people": 1566,
+ "naive_difference": 2.5405814549558876,
+ "headline": {
+  "att": 3.2702910963402068,
+  "pairs": 388,
+  "quitters": 403,
+  "largest_gap_before": 0.281980909944861,
+  "largest_gap_after": 0.07510804440158164
+ },
+ "interval_pairs_only": [
+  2.110614720378866,
+  4.426826975422035
+ ],
+ "placebo": {
+  "mean": -0.00533198250810337,
+  "low": -0.9800948368611739,
+  "high": 0.9551495181817861,
+  "runs": 200,
+  "share_as_large_as_headline": 0.0
+ },
+ "random_common_cause": {
+  "mean": 3.4265762617091338,
+  "low": 2.9598551166037375,
+  "high": 3.9437142837100554,
+  "runs": 200
+ },
+ "subset_80_percent": {
+  "mean": 3.351382028387588,
+  "low": 2.5626560736775374,
+  "high": 4.155245140536476,
+  "runs": 200
+ },
+ "caliper": {
+  "0.1": {
+   "att": 3.3516972010852712,
+   "pairs": 387,
+   "largest_gap_after": 0.09115520035899809
+  },
+  "0.2": {
+   "att": 3.2702910963402068,
+   "pairs": 388,
+   "largest_gap_after": 0.07510804440158164
+  },
+  "0.3": {
+   "att": 3.3338878486632386,
+   "pairs": 389,
+   "largest_gap_after": 0.09857232183673939
+  }
+ },
+ "bootstrap_whole_procedure": {
+  "mean": 3.3763163304535366,
+  "low": 2.239076461566701,
+  "high": 4.533119907644493,
+  "runs": 1000
+ },
+ "notebook_refuters_were_run_on": {
+  "estimator": "DoWhy backdoor.propensity_score_matching, default settings",
+  "estimate": 2.042
+ }
+}
